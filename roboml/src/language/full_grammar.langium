@@ -244,12 +244,12 @@ PrimaryExpression returns Expression:
 ;
 
 FunctionCall returns FunctionCall:
-    'FunctionCall' '{' ('unit' unit=Unit  )? 'ref' ref=[FunctionDef:STRING ] ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
+    'FunctionCall' '{' ('unit' unit=Unit  )? 'ref' ref=[FunctionDef:ID ] ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
 ;
 
 
 VariableRef returns VariableRef:
-    decl=[VariableDeclStmt:STRING]
+    decl=[VariableDeclStmt:ID]
 ;
 
 
@@ -259,10 +259,6 @@ Entrypoint returns Entrypoint:
 
 FunctionDef returns FunctionDef:
     'let' returnType=FunctionType name=ID ('()' | ( '('parameters+=Parameter  ("," parameters+=Parameter  )* ) ')' ) '{' (statement=Statement)? '}'  
-;
-
-Comment returns Comment:
-    {Comment} ( value=STRING  )?
 ;
 
 SetSpeedStmt returns SetSpeedStmt:
@@ -282,11 +278,11 @@ VariableDeclStmt returns VariableDeclStmt:
 ;
 
 VariableAffStmt returns VariableAffStmt:
-    {VariableAffStmt} decl=[VariableDeclStmt:STRING ]  '=' expr=Expression  
+    {VariableAffStmt} decl=[VariableDeclStmt:ID ]  '=' expr=Expression  
 ;
 
 MovementStmt returns MovementStmt:
-    'MovementStmt' '{' ('direction' direction=Direction  )? 'expr' expr=Expression  '}'  
+    direction=Direction expr=Expression  
 ;
 
 RotationStmt returns RotationStmt:
@@ -294,7 +290,7 @@ RotationStmt returns RotationStmt:
 ;
 
 FunctionCallStmt returns FunctionCallStmt:
-    {FunctionCallStmt} 'FunctionCallStmt' '{' ('voidfct' voidfct=[FunctionDef:STRING ] )? ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
+    {FunctionCallStmt} 'FunctionCallStmt' '{' ('voidfct' voidfct=[FunctionDef:ID ] )? ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
 ;
 
 Unit returns Unit:
