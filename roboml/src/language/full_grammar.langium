@@ -250,11 +250,11 @@ NumeralConst returns NumeralConst:
     {NumeralConst} (value=DOUBLE) ('in' unit=Unit)? ;
 
 VariableRef returns VariableRef:
-    'VariableRef' '{' ('unit' unit=Unit  )? 'decl' decl=[VariableDeclStmt:STRING ] '}'  
+    decl=[VariableDeclStmt:STRING ]
 ;
 
 ComparisonOp returns ComparisonOp:
-    'ComparisonOp' '{' ('unit' unit=Unit  )? ('operator' operator=ComparisonOperator  )? 'expr1' expr1=Expression  'expr2' expr2=Expression  '}'  
+    expr1=PrimaryExpression operator=ComparisonOperator expr2=PrimaryExpression
 ;
 
 BooleanConst returns BooleanConst:
