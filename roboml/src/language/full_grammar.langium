@@ -33,8 +33,8 @@ type Direction_LEFT = 'Left';
 type Direction_RIGHT = 'Right';
 
 type RotationDirection = RotationDirection_CLOCKWISE | RotationDirection_COUNTERCLOCKWISE;
-type RotationDirection_CLOCKWISE = 'clockwise';
-type RotationDirection_COUNTERCLOCKWISE = 'counterclockwise';
+type RotationDirection_CLOCKWISE = 'Clock';
+type RotationDirection_COUNTERCLOCKWISE = 'CounterClock';
 
 type ComparisonOperator = ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN | ComparisonOperator_NOTEQUAL;
 type ComparisonOperator_LOWERTHAN = '<';
@@ -244,7 +244,7 @@ PrimaryExpression returns Expression:
 ;
 
 FunctionCall returns FunctionCall:
-    'FunctionCall' '{' ('unit' unit=Unit  )? 'ref' ref=[FunctionDef:ID ] ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
+    ref=[FunctionDef:ID ] ( '()' | '(' parameters+=Expression  ("," parameters+=Expression  )* ')')
 ;
 
 
@@ -286,11 +286,11 @@ MovementStmt returns MovementStmt:
 ;
 
 RotationStmt returns RotationStmt:
-    'RotationStmt' '{' ('rotation' rotation=RotationDirection  )? 'degrees' degrees=Expression  '}'  
+    rotation=RotationDirection degrees=Expression
 ;
 
 FunctionCallStmt returns FunctionCallStmt:
-    {FunctionCallStmt} 'FunctionCallStmt' '{' ('voidfct' voidfct=[FunctionDef:ID ] )? ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
+    {FunctionCallStmt} voidfct=[FunctionDef:ID ] ( '()' | '(' parameters+=Expression  ("," parameters+=Expression  )* ')')
 ;
 
 Unit returns Unit:
@@ -309,15 +309,9 @@ ComparisonOperator_GREATERTHANEQUAL returns ComparisonOperator_GREATERTHANEQUAL:
 ComparisonOperator_GREATERTHAN returns ComparisonOperator_GREATERTHAN: '>' ;
 ComparisonOperator_NOTEQUAL returns ComparisonOperator_NOTEQUAL: '!=' ;
 
-BooleanOperator returns BooleanOperator:
-    BooleanOperator_AND | BooleanOperator_OR
-;
 BooleanOperator_AND returns BooleanOperator_AND: 'and' ;
 BooleanOperator_OR returns BooleanOperator_OR: 'or' ;
 
-ArithmeticOperator returns ArithmeticOperator:
-    ArithmeticOperator_PLUS | ArithmeticOperator_MINUS | ArithmeticOperator_MULT | ArithmeticOperator_DIV
-;
 ArithmeticOperator_PLUS returns ArithmeticOperator_PLUS: '+' ;
 ArithmeticOperator_MINUS returns ArithmeticOperator_MINUS: '-' ;
 ArithmeticOperator_MULT returns ArithmeticOperator_MULT: '*' ;
@@ -344,8 +338,8 @@ Direction_RIGHT returns Direction_RIGHT: 'Right' ;
 RotationDirection returns RotationDirection:
     RotationDirection_CLOCKWISE | RotationDirection_COUNTERCLOCKWISE
 ;
-RotationDirection_CLOCKWISE returns RotationDirection_CLOCKWISE: 'clockwise' ;
-RotationDirection_COUNTERCLOCKWISE returns RotationDirection_COUNTERCLOCKWISE: 'counterclockwise' ;
+RotationDirection_CLOCKWISE returns RotationDirection_CLOCKWISE: 'Clock' ;
+RotationDirection_COUNTERCLOCKWISE returns RotationDirection_COUNTERCLOCKWISE: 'CounterClock' ;
 
 Parameter returns Parameter:
     {Parameter} ^type=VarType name=ID
