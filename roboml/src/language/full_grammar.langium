@@ -27,10 +27,10 @@ type Unit_MM = 'mm';
 type Unit_CM = 'cm';
 
 type Direction = Direction_FORWARD | Direction_BACKWARD | Direction_LEFT | Direction_RIGHT;
-type Direction_FORWARD = 'forward';
-type Direction_BACKWARD = 'backward';
-type Direction_LEFT = 'left';
-type Direction_RIGHT = 'right';
+type Direction_FORWARD = 'Forward';
+type Direction_BACKWARD = 'Backward';
+type Direction_LEFT = 'Left';
+type Direction_RIGHT = 'Right';
 
 type RotationDirection = RotationDirection_CLOCKWISE | RotationDirection_COUNTERCLOCKWISE;
 type RotationDirection_CLOCKWISE = 'clockwise';
@@ -185,7 +185,7 @@ entry RoboProgram returns RoboProgram:
 ;
 
 Statement returns Statement:
-    SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | VariableDeclStmt | MovementStmt | RotationStmt | FunctionCallStmt ('comment' comment=Comment  )?
+    (SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | VariableDeclStmt | MovementStmt | RotationStmt | FunctionCallStmt ('comment' comment=Comment  )?) (next=Statement)?
 ;
 
 Expression returns Expression:
@@ -318,10 +318,10 @@ VarType_BOOLEAN returns VarType_BOOLEAN: 'bool' ;
 Direction returns Direction:
     Direction_FORWARD | Direction_BACKWARD | Direction_LEFT | Direction_RIGHT
 ;
-Direction_FORWARD returns Direction_FORWARD: 'forward' ;
-Direction_BACKWARD returns Direction_BACKWARD: 'backward' ;
-Direction_LEFT returns Direction_LEFT: 'left' ;
-Direction_RIGHT returns Direction_RIGHT: 'right' ;
+Direction_FORWARD returns Direction_FORWARD: 'Forward' ;
+Direction_BACKWARD returns Direction_BACKWARD: 'Backward' ;
+Direction_LEFT returns Direction_LEFT: 'Left' ;
+Direction_RIGHT returns Direction_RIGHT: 'Right' ;
 
 RotationDirection returns RotationDirection:
     RotationDirection_CLOCKWISE | RotationDirection_COUNTERCLOCKWISE
