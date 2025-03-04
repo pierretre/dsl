@@ -2,7 +2,7 @@
 grammar RoboML
 
 
-terminal DOUBLE returns number: INT '.' INT | INT; 
+terminal DOUBLE returns number: INT '.' INT | INT;
 terminal BOOLEAN returns boolean: 'true' | 'false';
 terminal ID returns string:'^'? ('a' ..'z' | 'A' ..'Z' | '_' )('a' ..'z' | 'A' ..'Z' | '_' | '0' ..'9' )* ;
 terminal INT returns number:'0' ..'9' +;
@@ -36,7 +36,7 @@ type RotationDirection = RotationDirection_CLOCKWISE | RotationDirection_COUNTER
 type RotationDirection_CLOCKWISE = 'clockwise';
 type RotationDirection_COUNTERCLOCKWISE = 'counterclockwise';
 
-type ComparisonOperator = ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN;
+type ComparisonOperator = ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN | ComparisonOperator_NOTEQUAL;
 type ComparisonOperator_LOWERTHAN = '<';
 type ComparisonOperator_LOWERTHANEQUAL = '<=';
 type ComparisonOperator_EQUAL = '==';
@@ -138,6 +138,11 @@ interface VariableRef extends LiteralExpression {
 	decl: @VariableDeclStmt
 }
 
+interface VariableAffStmt extends Statement {
+	decl: @VariableDeclStmt
+    expr: Expression
+}
+
 interface ComparisonOp extends BinaryOp {
 	operator?: ComparisonOperator
 }
@@ -179,7 +184,7 @@ entry RoboProgram returns RoboProgram:
 ;
 
 Statement returns Statement:
-    SetSpeedStmt | IfStmt | LoopStmt | VariableDeclStmt | MovementStmt | RotationStmt | FunctionCallStmt ('comment' comment=Comment  )?
+    SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | VariableDeclStmt | MovementStmt | RotationStmt | FunctionCallStmt ('comment' comment=Comment  )?
 ;
 
 Expression returns Expression:
@@ -211,7 +216,11 @@ LoopStmt returns LoopStmt:
 ;
 
 VariableDeclStmt returns VariableDeclStmt:
-    'var' type=VarType variable=Variable  'initialexpr' initialexpr=Expression  
+    'var' type=VarType variable=Variable  '=' initialexpr=Expression  
+;
+
+VariableAffStmt returns VariableAffStmt:
+    {VariableAffStmt} decl=[VariableDeclStmt:STRING ]  '=' expr=Expression  
 ;
 
 MovementStmt returns MovementStmt:
@@ -233,7 +242,7 @@ Unit_MM returns Unit_MM: 'mm' ;
 Unit_CM returns Unit_CM: 'cm' ;
 
 NumeralConst returns NumeralConst:
-    {NumeralConst} (value=DOUBLE) 'in' (unit=Unit)? ;
+    {NumeralConst} (value=DOUBLE) ('in' unit=Unit)? ;
 
 VariableRef returns VariableRef:
     'VariableRef' '{' ('unit' unit=Unit  )? 'decl' decl=[VariableDeclStmt:STRING ] '}'  
@@ -268,7 +277,7 @@ FunctionCall returns FunctionCall:
 ;
 
 ComparisonOperator returns ComparisonOperator:
-    ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN
+    ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN | ComparisonOperator_NOTEQUAL
 ;
 ComparisonOperator_LOWERTHAN returns ComparisonOperator_LOWERTHAN: '<' ;
 ComparisonOperator_LOWERTHANEQUAL returns ComparisonOperator_LOWERTHANEQUAL: '<=' ;
@@ -292,7 +301,7 @@ ArithmeticOperator_MULT returns ArithmeticOperator_MULT: '*' ;
 ArithmeticOperator_DIV returns ArithmeticOperator_DIV: '/' ;
 
 Variable returns Variable:
-    {Variable} name=STRING
+    {Variable} name=ID
 ;
 
 VarType returns VarType:
