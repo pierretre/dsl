@@ -55,18 +55,18 @@ interface Statement {
 }
 
 interface Comment {
-	value?: String
+	value?: MyString
 }
 
 interface FunctionDef {
 	statements: Statement[]
-	name?: String
+	name?: MyString
 	parameters: Parameter[]
 	returnType?: FunctionType
 }
 
 interface Parameter {
-	name?: String
+	name?: MyString
 	^type?: VarType
 }
 
@@ -96,7 +96,7 @@ interface VariableDeclStmt extends Statement {
 }
 
 interface Variable {
-	name?: String
+	name?: MyString
 }
 
 interface MovementStmt extends Statement {

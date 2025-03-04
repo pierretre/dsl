@@ -1,5 +1,5 @@
 
-type String = string;
+type MyString = string;
 
 type Double = string;
 
