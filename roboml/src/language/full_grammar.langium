@@ -93,13 +93,14 @@ interface SetSpeedStmt extends Statement {
 }
 
 interface IfStmt extends Statement {
-	then: Statement[]
+	then: Statement
 	condition: Expression
-	else: Statement[]
+	else?: Statement
+    elseif?: Statement
 }
 
 interface LoopStmt extends Statement {
-	instruction: Statement[]
+	instruction: Statement
 	condition: Expression
 }
 
@@ -181,7 +182,7 @@ interface FunctionCall extends LiteralExpression {
 }
 
 entry RoboProgram returns RoboProgram:
-    entrypoint=Entrypoint   ( function+=FunctionDef  )*   
+    entrypoint=Entrypoint   ( function+=FunctionDef  )*
 ;
 
 Statement returns Statement:
@@ -204,7 +205,7 @@ UnaryExpression returns Expression:
 ;
 
 Opposite returns Opposite:
-    '-' expr=NumeralPrimaryExpression  
+    '-' expr=NumeralPrimaryExpression
 ;
 
 NumeralPrimaryExpression returns Expression:
@@ -232,7 +233,7 @@ BooleanPrimaryExpression returns Expression:
 ;
 
 BooleanConst returns BooleanConst:
-    {BooleanConst} value=BOOLEAN  
+    {BooleanConst} value=BOOLEAN
 ;
 
 Not returns Not:
@@ -254,11 +255,11 @@ VariableRef returns VariableRef:
 
 
 Entrypoint returns Entrypoint:
-    {Entrypoint} 'let' 'void' 'entry' '()' '{' (statement=Statement)? '}'  
+    {Entrypoint} 'let' 'void' 'entry' '()' '{' (statement=Statement)? '}'
 ;
 
 FunctionDef returns FunctionDef:
-    'let' returnType=FunctionType name=ID ('()' | ( '('parameters+=Parameter  ("," parameters+=Parameter  )* ) ')' ) '{' (statement=Statement)? '}'  
+    'let' returnType=FunctionType name=ID ('()' | ( '('parameters+=Parameter  ("," parameters+=Parameter  )* ) ')' ) '{' (statement=Statement)? '}'
 ;
 
 SetSpeedStmt returns SetSpeedStmt:
@@ -266,11 +267,14 @@ SetSpeedStmt returns SetSpeedStmt:
 ;
 
 IfStmt returns IfStmt:
-    'IfStmt' '{' ('then' '{' then+=Statement  ("," then+=Statement  )* '}' )? 'condition' condition=Expression  ('else' '{' else+=Statement  ("," else+=Statement  )* '}' )? '}'  
+    'if' condition=Expression 'then' '{' then=Statement* '}'
+    ( 'else' 'if' condition=Expression 'then' '{' elseif=Statement* '}' )*
+    ( 'else' '{' else=Statement* '}' )?
 ;
 
+
 LoopStmt returns LoopStmt:
-    'loop' condition=Expression '{' instruction+=Statement  ("," instruction+=Statement  )* '}'
+    'loop' condition=Expression '{' instruction=Statement  ("," instruction=Statement  )* '}'
 ;
 
 VariableDeclStmt returns VariableDeclStmt:
