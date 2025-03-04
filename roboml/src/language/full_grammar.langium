@@ -60,11 +60,12 @@ interface RoboProgram {
 }
 
 interface Entrypoint {
-	statements: Statement[]
+	statement?: Statement
 }
 
 interface Statement {
 	comment?: Comment
+    next?: Statement
 }
 
 interface Comment {
@@ -72,10 +73,10 @@ interface Comment {
 }
 
 interface FunctionDef {
-	statements: Statement[]
+	statement?: Statement
 	name?: string
 	parameters: Parameter[]
-	returnType?: FunctionType
+	returnType: FunctionType
 }
 
 interface Parameter {
@@ -188,15 +189,19 @@ Statement returns Statement:
 ;
 
 Expression returns Expression:
-    NumeralConst | VariableRef | ComparisonOp | BooleanConst | Not | LogicOp | Opposite | ArithmeticOp | FunctionCall 
+    PrimaryExpression | ComparisonOp | LogicOp | ArithmeticOp 
+;
+
+PrimaryExpression returns Expression:
+    NumeralConst | FunctionCall | VariableRef | BooleanConst | Not |  Opposite | '(' Expression ')'
 ;
 
 Entrypoint returns Entrypoint:
-    {Entrypoint} 'let' 'void' 'entry' '()' '{' (statements+=Statement)* '}'  
+    {Entrypoint} 'let' 'void' 'entry' '()' '{' (statement=Statement)? '}'  
 ;
 
 FunctionDef returns FunctionDef:
-    'FunctionDef' '{' ('name' name=STRING  )? ('returnType' returnType=FunctionType  )? 'statements' '{' statements+=Statement  ("," statements+=Statement  )* '}' ('parameters' '{' parameters+=Parameter  ("," parameters+=Parameter  )* '}' )? '}'  
+    'let' returnType=FunctionType name=ID ('()' | ( '('parameters+=Parameter  ("," parameters+=Parameter  )* ) ')' ) '{' (statement=Statement)? '}'  
 ;
 
 Comment returns Comment:
@@ -253,23 +258,23 @@ ComparisonOp returns ComparisonOp:
 ;
 
 BooleanConst returns BooleanConst:
-    {BooleanConst} 'BooleanConst' '{' ('unit' unit=Unit  )? ('value' value=BOOLEAN  )? '}'  
+    {BooleanConst} value=BOOLEAN  
 ;
 
 Not returns Not:
-    'Not' '{' ('unit' unit=Unit  )? 'expr' expr=Expression  '}'  
+    'not' expr=PrimaryExpression
 ;
 
 LogicOp returns LogicOp:
-    'LogicOp' '{' ('unit' unit=Unit  )? ('operator' operator=BooleanOperator  )? 'expr1' expr1=Expression  'expr2' expr2=Expression  '}'  
+    expr1=PrimaryExpression operator=BooleanOperator expr2=PrimaryExpression
 ;
 
 Opposite returns Opposite:
-    'Opposite' '{' ('unit' unit=Unit  )? 'expr' expr=Expression  '}'  
+    '-' expr=PrimaryExpression  
 ;
 
 ArithmeticOp returns ArithmeticOp:
-    'ArithmeticOp' '{' ('unit' unit=Unit  )? ('operator' operator=ArithmeticOperator  )? 'expr1' expr1=Expression  'expr2' expr2=Expression  '}'  
+    operator=ArithmeticOperator expr1=PrimaryExpression expr2=PrimaryExpression  
 ;
 
 FunctionCall returns FunctionCall:
@@ -325,7 +330,7 @@ RotationDirection_CLOCKWISE returns RotationDirection_CLOCKWISE: 'clockwise' ;
 RotationDirection_COUNTERCLOCKWISE returns RotationDirection_COUNTERCLOCKWISE: 'counterclockwise' ;
 
 Parameter returns Parameter:
-    {Parameter} 'Parameter' '{' ('name' name=STRING  )? ('type' ^type=VarType  )? '}'  
+    {Parameter} ^type=VarType name=ID
 ;
 
 FunctionType returns FunctionType:
