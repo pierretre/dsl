@@ -185,16 +185,73 @@ entry RoboProgram returns RoboProgram:
 ;
 
 Statement returns Statement:
-    (SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | VariableDeclStmt | MovementStmt | RotationStmt | FunctionCallStmt ('comment' comment=Comment  )?) (next=Statement)?
+    (SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | VariableDeclStmt | MovementStmt | RotationStmt | FunctionCallStmt)(next=Statement)?
 ;
 
+
 Expression returns Expression:
-    PrimaryExpression | ComparisonOp | LogicOp | ArithmeticOp 
+    NumeralExpression | BooleanExpression
+;
+
+NumeralExpression returns ArithmeticOp:
+    expr1=MultiplicativeExpression (operator=(ArithmeticOperator_PLUS | ArithmeticOperator_MINUS) expr2=MultiplicativeExpression)*;
+
+MultiplicativeExpression returns ArithmeticOp:
+    expr1=UnaryExpression (operator=(ArithmeticOperator_MULT | ArithmeticOperator_DIV) expr2=UnaryExpression)*;
+
+UnaryExpression returns Expression:
+    Opposite | NumeralPrimaryExpression
+;
+
+Opposite returns Opposite:
+    '-' expr=NumeralPrimaryExpression  
+;
+
+NumeralPrimaryExpression returns Expression:
+    NumeralConst | PrimaryExpression
+;
+
+NumeralConst returns NumeralConst:
+    {NumeralConst} value=DOUBLE ('in' unit=Unit)?
+;
+
+BooleanExpression returns LogicOp:
+    expr1=AndExpression (operator=BooleanOperator_OR expr2=AndExpression)*
+;
+
+AndExpression returns LogicOp:
+    expr1=ComparisonExpression (operator=BooleanOperator_AND expr2=ComparisonExpression)*
+;
+
+ComparisonExpression returns ComparisonOp:
+    (expr1=NumeralPrimaryExpression (operator=ComparisonOperator expr2=NumeralPrimaryExpression)?) | BooleanPrimaryExpression
+;
+
+BooleanPrimaryExpression returns Expression:
+    BooleanConst | PrimaryExpression
+;
+
+BooleanConst returns BooleanConst:
+    {BooleanConst} value=BOOLEAN  
+;
+
+Not returns Not:
+    'not' expr=BooleanPrimaryExpression
 ;
 
 PrimaryExpression returns Expression:
-    NumeralConst | FunctionCall | VariableRef | BooleanConst | Not |  Opposite | '(' Expression ')'
+    VariableRef | FunctionCall | Not | '(' Expression ')'
 ;
+
+FunctionCall returns FunctionCall:
+    'FunctionCall' '{' ('unit' unit=Unit  )? 'ref' ref=[FunctionDef:STRING ] ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
+;
+
+
+VariableRef returns VariableRef:
+    decl=[VariableDeclStmt:STRING]
+;
+
 
 Entrypoint returns Entrypoint:
     {Entrypoint} 'let' 'void' 'entry' '()' '{' (statement=Statement)? '}'  
@@ -245,41 +302,6 @@ Unit returns Unit:
 ;
 Unit_MM returns Unit_MM: 'mm' ;
 Unit_CM returns Unit_CM: 'cm' ;
-
-NumeralConst returns NumeralConst:
-    {NumeralConst} (value=DOUBLE) ('in' unit=Unit)? ;
-
-VariableRef returns VariableRef:
-    decl=[VariableDeclStmt:STRING ]
-;
-
-ComparisonOp returns ComparisonOp:
-    expr1=PrimaryExpression operator=ComparisonOperator expr2=PrimaryExpression
-;
-
-BooleanConst returns BooleanConst:
-    {BooleanConst} value=BOOLEAN  
-;
-
-Not returns Not:
-    'not' expr=PrimaryExpression
-;
-
-LogicOp returns LogicOp:
-    expr1=PrimaryExpression operator=BooleanOperator expr2=PrimaryExpression
-;
-
-Opposite returns Opposite:
-    '-' expr=PrimaryExpression  
-;
-
-ArithmeticOp returns ArithmeticOp:
-    operator=ArithmeticOperator expr1=PrimaryExpression expr2=PrimaryExpression  
-;
-
-FunctionCall returns FunctionCall:
-    'FunctionCall' '{' ('unit' unit=Unit  )? 'ref' ref=[FunctionDef:STRING ] ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
-;
 
 ComparisonOperator returns ComparisonOperator:
     ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN | ComparisonOperator_NOTEQUAL
