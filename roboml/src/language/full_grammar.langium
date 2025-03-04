@@ -2,7 +2,7 @@
 grammar RoboML
 
 
-terminal DOUBLE returns number: INT '.' INT;
+terminal DOUBLE returns number: INT '.' INT | INT; 
 terminal BOOLEAN returns boolean: 'true' | 'false';
 terminal ID returns string:'^'? ('a' ..'z' | 'A' ..'Z' | '_' )('a' ..'z' | 'A' ..'Z' | '_' | '0' ..'9' )* ;
 terminal INT returns number:'0' ..'9' +;
