@@ -12,7 +12,6 @@ hidden terminal SL_COMMENT returns string:'//'  !('\n' | '\r' )('\r'? '\n' )?  ;
 hidden terminal WS returns string:(' ' | '\t' | '\r' | '\n' )+;
 terminal ANY_OTHER returns string:.;
 
-
 type VarType = 'number' | 'bool';
 
 type FunctionType = VarType | 'void';
@@ -39,12 +38,7 @@ interface Entrypoint {
 }
 
 interface Statement {
-	comment?: Comment
     next?: Statement
-}
-
-interface Comment {
-	value?: string
 }
 
 interface FunctionDef {
@@ -79,14 +73,14 @@ interface LoopStmt extends Statement {
 	condition: Expression
 }
 
-interface VariableDeclStmt extends Statement {
-	variable: Variable
-	initialexpr: Expression
-	type?: VarType
+interface Variable extends Statement {
+    name: string
+	type: VarType
+	variable: VariableValue
 }
 
-interface Variable {
-	name?: string
+interface VariableValue {
+    value: Expression 
 }
 
 interface MovementStmt extends Statement {
@@ -109,6 +103,9 @@ interface NumeralConst extends LiteralExpression {
 }
 
 interface LiteralExpression extends Expression {
+}
+
+interface SensorFunctionCall extends LiteralExpression {
 }
 
 interface VariableRef extends LiteralExpression {
@@ -161,34 +158,31 @@ entry RoboProgram returns RoboProgram:
 ;
 
 Statement returns Statement:
-    (SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | VariableDeclStmt | MovementStmt | RotationStmt | FunctionCallStmt) (next=Statement)?
+    (SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | Variable | MovementStmt | RotationStmt | FunctionCallStmt) (next=Statement)?
 ;
 
 
-Expression returns Expression:
-    NumeralExpression | BooleanExpression
-;
+Expression returns Expression: NumeralExpression | BooleanExpression;
 
 NumeralExpression returns ArithmeticOp:
     expr1=MultiplicativeExpression (operator=('+' | '-') expr2=MultiplicativeExpression)*;
 
 MultiplicativeExpression returns ArithmeticOp:
-    expr1=UnaryExpression (operator=('*' | '/') expr2=UnaryExpression)*;
-
-UnaryExpression returns Expression:
-    Opposite | NumeralPrimaryExpression
+    expr1=UnaryExpression (operator=('*' | '/') expr2=UnaryExpression)*
 ;
 
-Opposite returns Opposite:
-    '-' expr=NumeralPrimaryExpression
-;
+UnaryExpression returns Expression: (Opposite | NumeralPrimaryExpression);
 
-NumeralPrimaryExpression returns Expression:
-    NumeralConst | PrimaryExpression
-;
+Opposite returns Opposite: '-' expr=NumeralPrimaryExpression;
+
+NumeralPrimaryExpression returns Expression: NumeralConst | LiteralExpression;
 
 NumeralConst returns NumeralConst:
     {NumeralConst} value=DOUBLE ('in' unit=Unit)?
+;
+
+SensorFunctionCall returns SensorFunctionCall:
+    {SensorFunctionCall} ('getDistance()' | 'getTimestamp()') ('in' unit=Unit)?
 ;
 
 BooleanExpression returns LogicOp:
@@ -196,7 +190,7 @@ BooleanExpression returns LogicOp:
 ;
 
 AndExpression returns LogicOp:
-    expr1=ComparisonExpression (operator='and' expr2=ComparisonExpression)*
+     expr1=ComparisonExpression (operator='and' expr2=ComparisonExpression)*
 ;
 
 ComparisonExpression returns ComparisonOp:
@@ -204,26 +198,24 @@ ComparisonExpression returns ComparisonOp:
 ;
 
 BooleanPrimaryExpression returns Expression:
-    BooleanConst | PrimaryExpression
+    BooleanConst | LiteralExpression
 ;
 
 BooleanConst returns BooleanConst: {BooleanConst} value=BOOLEAN;
 
 Not returns Not: 'not' expr=BooleanPrimaryExpression;
 
-PrimaryExpression returns Expression:
-    VariableRef | FunctionCall | Not | '(' Expression ')'
+LiteralExpression returns Expression:
+    VariableRef | FunctionCall | Not | '(' Expression ')' | SensorFunctionCall
 ;
 
 FunctionCall returns FunctionCall:
     ref=[FunctionDef:ID ] ( '()' | '(' parameters+=Expression  ("," parameters+=Expression  )* ')')
-;
-
+; 
 
 VariableRef returns VariableRef:
     decl=[Variable:ID]
 ;
-
 
 Entrypoint returns Entrypoint:
     {Entrypoint} 'let' 'void' 'entry' '()' '{' (statement=Statement)? '}'
@@ -233,34 +225,29 @@ FunctionDef returns FunctionDef:
     'let' returnType=FunctionType name=ID ('()' | ( '('parameters+=Parameter  ("," parameters+=Parameter  )* ) ')' ) '{' (statement=Statement)? '}'
 ;
 
-SetSpeedStmt returns SetSpeedStmt:
-    'setSpeed(' value=Expression ')'
-;
-
 IfStmt returns IfStmt:
     'if' condition=Expression 'then' '{' then=Statement* '}'
     ( 'else' 'if' condition=Expression 'then' '{' elseif=Statement* '}' )*
     ( 'else' '{' else=Statement* '}' )?
 ;
 
-
 LoopStmt returns LoopStmt:
     'loop' condition=Expression '{' instruction=Statement  ("," instruction=Statement  )* '}'
 ;
 
-VariableDeclStmt returns VariableDeclStmt:
-    'var' type=VarType variable=Variable '=' initialexpr=Expression  
+Variable returns Variable: 
+    'var' type=VarType name=ID '=' variable=VariableValue
 ;
 
 VariableAffStmt returns VariableAffStmt:
     {VariableAffStmt} decl=[Variable:ID ]  '=' expr=Expression  
 ;
 
-// Commands :
-
 MovementStmt returns MovementStmt: direction=Direction expr=Expression;
 
 RotationStmt returns RotationStmt: rotation=RotationDirection degrees=Expression;
+
+SetSpeedStmt returns SetSpeedStmt: 'setSpeed(' value=Expression ')';
 
 FunctionCallStmt returns FunctionCallStmt:
     {FunctionCallStmt} voidfct=[FunctionDef:ID ] ( '()' | '(' parameters+=Expression  ("," parameters+=Expression  )* ')')
@@ -270,7 +257,7 @@ Unit returns Unit: 'mm' | 'cm';
 
 ComparisonOperator returns ComparisonOperator: '<' | '<=' | '==' | '>=' | '>' | '!=';
 
-Variable returns Variable: {Variable} name=ID;
+VariableValue returns VariableValue: {VariableValue} value=Expression;
 
 VarType returns VarType: 'number' | 'bool' ;
 
