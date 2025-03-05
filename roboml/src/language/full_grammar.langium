@@ -13,46 +13,21 @@ hidden terminal WS returns string:(' ' | '\t' | '\r' | '\n' )+;
 terminal ANY_OTHER returns string:.;
 
 
-type VarType = VarType_NUMBER | VarType_BOOLEAN;
-type VarType_NUMBER = 'number';
-type VarType_BOOLEAN = 'bool';
+type VarType = 'number' | 'bool';
 
-type FunctionType = FunctionType_VOID | FunctionType_NUMBER | FunctionType_BOOLEAN;
-type FunctionType_VOID = 'void';
-type FunctionType_NUMBER = 'number';
-type FunctionType_BOOLEAN = 'bool';
+type FunctionType = VarType | 'void';
 
-type Unit = Unit_MM | Unit_CM;
-type Unit_MM = 'mm';
-type Unit_CM = 'cm';
+type Unit = 'mm' | 'cm';
 
-type Direction = Direction_FORWARD | Direction_BACKWARD | Direction_LEFT | Direction_RIGHT;
-type Direction_FORWARD = 'Forward';
-type Direction_BACKWARD = 'Backward';
-type Direction_LEFT = 'Left';
-type Direction_RIGHT = 'Right';
+type Direction = 'Forward' | 'Backward' | 'Left' | 'Right';
 
-type RotationDirection = RotationDirection_CLOCKWISE | RotationDirection_COUNTERCLOCKWISE;
-type RotationDirection_CLOCKWISE = 'Clock';
-type RotationDirection_COUNTERCLOCKWISE = 'CounterClock';
+type RotationDirection = 'Clock' | 'CounterClock';
 
-type ComparisonOperator = ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN | ComparisonOperator_NOTEQUAL;
-type ComparisonOperator_LOWERTHAN = '<';
-type ComparisonOperator_LOWERTHANEQUAL = '<=';
-type ComparisonOperator_EQUAL = '==';
-type ComparisonOperator_GREATERTHANEQUAL = '>=';
-type ComparisonOperator_GREATERTHAN = '>';
-type ComparisonOperator_NOTEQUAL = '!=';
+type ComparisonOperator = '<' | '<=' | '==' | '>=' | '>' | '!=';
 
-type BooleanOperator = BooleanOperator_AND | BooleanOperator_OR;
-type BooleanOperator_AND = 'and';
-type BooleanOperator_OR = 'or';
+type BooleanOperator = 'and' | 'or';
 
-type ArithmeticOperator = ArithmeticOperator_PLUS | ArithmeticOperator_MINUS | ArithmeticOperator_MULT | ArithmeticOperator_DIV;
-type ArithmeticOperator_PLUS = '+';
-type ArithmeticOperator_MINUS = '-';
-type ArithmeticOperator_MULT = '*';
-type ArithmeticOperator_DIV = '/';
+type ArithmeticOperator = '+' | '-' | '*' | '/';
 
 interface RoboProgram {
 	entrypoint: Entrypoint
@@ -137,11 +112,11 @@ interface LiteralExpression extends Expression {
 }
 
 interface VariableRef extends LiteralExpression {
-	decl: @VariableDeclStmt
+	decl: @Variable
 }
 
 interface VariableAffStmt extends Statement {
-	decl: @VariableDeclStmt
+	decl: @Variable
     expr: Expression
 }
 
@@ -195,10 +170,10 @@ Expression returns Expression:
 ;
 
 NumeralExpression returns ArithmeticOp:
-    expr1=MultiplicativeExpression (operator=(ArithmeticOperator_PLUS | ArithmeticOperator_MINUS) expr2=MultiplicativeExpression)*;
+    expr1=MultiplicativeExpression (operator=('+' | '-') expr2=MultiplicativeExpression)*;
 
 MultiplicativeExpression returns ArithmeticOp:
-    expr1=UnaryExpression (operator=(ArithmeticOperator_MULT | ArithmeticOperator_DIV) expr2=UnaryExpression)*;
+    expr1=UnaryExpression (operator=('*' | '/') expr2=UnaryExpression)*;
 
 UnaryExpression returns Expression:
     Opposite | NumeralPrimaryExpression
@@ -217,11 +192,11 @@ NumeralConst returns NumeralConst:
 ;
 
 BooleanExpression returns LogicOp:
-    expr1=AndExpression (operator=BooleanOperator_OR expr2=AndExpression)*
+    expr1=AndExpression (operator='or' expr2=AndExpression)*
 ;
 
 AndExpression returns LogicOp:
-    expr1=ComparisonExpression (operator=BooleanOperator_AND expr2=ComparisonExpression)*
+    expr1=ComparisonExpression (operator='and' expr2=ComparisonExpression)*
 ;
 
 ComparisonExpression returns ComparisonOp:
@@ -232,13 +207,9 @@ BooleanPrimaryExpression returns Expression:
     BooleanConst | PrimaryExpression
 ;
 
-BooleanConst returns BooleanConst:
-    {BooleanConst} value=BOOLEAN
-;
+BooleanConst returns BooleanConst: {BooleanConst} value=BOOLEAN;
 
-Not returns Not:
-    'not' expr=BooleanPrimaryExpression
-;
+Not returns Not: 'not' expr=BooleanPrimaryExpression;
 
 PrimaryExpression returns Expression:
     VariableRef | FunctionCall | Not | '(' Expression ')'
@@ -250,7 +221,7 @@ FunctionCall returns FunctionCall:
 
 
 VariableRef returns VariableRef:
-    decl=[VariableDeclStmt:ID]
+    decl=[Variable:ID]
 ;
 
 
@@ -278,81 +249,35 @@ LoopStmt returns LoopStmt:
 ;
 
 VariableDeclStmt returns VariableDeclStmt:
-    'var' type=VarType variable=Variable  '=' initialexpr=Expression  
+    'var' type=VarType variable=Variable '=' initialexpr=Expression  
 ;
 
 VariableAffStmt returns VariableAffStmt:
-    {VariableAffStmt} decl=[VariableDeclStmt:ID ]  '=' expr=Expression  
+    {VariableAffStmt} decl=[Variable:ID ]  '=' expr=Expression  
 ;
 
-MovementStmt returns MovementStmt:
-    direction=Direction expr=Expression  
-;
+// Commands :
 
-RotationStmt returns RotationStmt:
-    rotation=RotationDirection degrees=Expression
-;
+MovementStmt returns MovementStmt: direction=Direction expr=Expression;
+
+RotationStmt returns RotationStmt: rotation=RotationDirection degrees=Expression;
 
 FunctionCallStmt returns FunctionCallStmt:
     {FunctionCallStmt} voidfct=[FunctionDef:ID ] ( '()' | '(' parameters+=Expression  ("," parameters+=Expression  )* ')')
 ;
 
-Unit returns Unit:
-    Unit_MM | Unit_CM
-;
-Unit_MM returns Unit_MM: 'mm' ;
-Unit_CM returns Unit_CM: 'cm' ;
+Unit returns Unit: 'mm' | 'cm';
 
-ComparisonOperator returns ComparisonOperator:
-    ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN | ComparisonOperator_NOTEQUAL
-;
-ComparisonOperator_LOWERTHAN returns ComparisonOperator_LOWERTHAN: '<' ;
-ComparisonOperator_LOWERTHANEQUAL returns ComparisonOperator_LOWERTHANEQUAL: '<=' ;
-ComparisonOperator_EQUAL returns ComparisonOperator_EQUAL: '==' ;
-ComparisonOperator_GREATERTHANEQUAL returns ComparisonOperator_GREATERTHANEQUAL: '>=' ;
-ComparisonOperator_GREATERTHAN returns ComparisonOperator_GREATERTHAN: '>' ;
-ComparisonOperator_NOTEQUAL returns ComparisonOperator_NOTEQUAL: '!=' ;
+ComparisonOperator returns ComparisonOperator: '<' | '<=' | '==' | '>=' | '>' | '!=';
 
-BooleanOperator_AND returns BooleanOperator_AND: 'and' ;
-BooleanOperator_OR returns BooleanOperator_OR: 'or' ;
+Variable returns Variable: {Variable} name=ID;
 
-ArithmeticOperator_PLUS returns ArithmeticOperator_PLUS: '+' ;
-ArithmeticOperator_MINUS returns ArithmeticOperator_MINUS: '-' ;
-ArithmeticOperator_MULT returns ArithmeticOperator_MULT: '*' ;
-ArithmeticOperator_DIV returns ArithmeticOperator_DIV: '/' ;
+VarType returns VarType: 'number' | 'bool' ;
 
-Variable returns Variable:
-    {Variable} name=ID
-;
+Direction returns Direction: 'Forward' | 'Backward' | 'Left' | 'Right';
 
-VarType returns VarType:
-    VarType_NUMBER | VarType_BOOLEAN
-;
-VarType_NUMBER returns VarType_NUMBER: 'number' ;
-VarType_BOOLEAN returns VarType_BOOLEAN: 'bool' ;
+RotationDirection returns RotationDirection: 'Clock' | 'CounterClock';
 
-Direction returns Direction:
-    Direction_FORWARD | Direction_BACKWARD | Direction_LEFT | Direction_RIGHT
-;
-Direction_FORWARD returns Direction_FORWARD: 'Forward' ;
-Direction_BACKWARD returns Direction_BACKWARD: 'Backward' ;
-Direction_LEFT returns Direction_LEFT: 'Left' ;
-Direction_RIGHT returns Direction_RIGHT: 'Right' ;
+Parameter returns Parameter: {Parameter} ^type=VarType name=ID;
 
-RotationDirection returns RotationDirection:
-    RotationDirection_CLOCKWISE | RotationDirection_COUNTERCLOCKWISE
-;
-RotationDirection_CLOCKWISE returns RotationDirection_CLOCKWISE: 'Clock' ;
-RotationDirection_COUNTERCLOCKWISE returns RotationDirection_COUNTERCLOCKWISE: 'CounterClock' ;
-
-Parameter returns Parameter:
-    {Parameter} ^type=VarType name=ID
-;
-
-FunctionType returns FunctionType:
-    FunctionType_VOID | FunctionType_NUMBER | FunctionType_BOOLEAN
-;
-FunctionType_VOID returns FunctionType_VOID: 'void' ;
-FunctionType_NUMBER returns FunctionType_NUMBER: 'number' ;
-FunctionType_BOOLEAN returns FunctionType_BOOLEAN: 'bool' ;
-
+FunctionType returns FunctionType: VarType | 'void';
