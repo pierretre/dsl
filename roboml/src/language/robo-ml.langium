@@ -1,170 +1,123 @@
-grammar RoboMl
+
+grammar RoboML
+
 import 'Terminals'
 import 'idm-types'
 import 'XMLType-types'
 
 entry RoboProgram returns RoboProgram:
-    'RoboProgram' '{' 'entrypoint' entrypoint=Entrypoint  ('function' '{' function+=FunctionDef  ("," function+=FunctionDef  )* '}' )? '}'  
-;
-
-Statement returns Statement:
-    SetSpeedStmt | IfStmt | LoopStmt | VariableDeclStmt | MovementStmt | RotationStmt | FunctionCallStmt 
-;
-
-Expression returns Expression:
-    NumeralConst | VariableRef | ComparisonOp | BooleanConst | Not | LogicOp | Opposite | ArithmeticOp | FunctionCall 
+    entrypoint=Entrypoint   ( function+=FunctionDef  )*
 ;
 
 Entrypoint returns Entrypoint:
-    {Entrypoint} 'let entry' '{' ('statements' '{' statements+=Statement  ("," statements+=Statement  )* '}' )? '}'  
+    {Entrypoint} 'let' 'void' 'entry' '()' body=Block
 ;
 
 FunctionDef returns FunctionDef:
-    'FunctionDef' '{' ('name' name=String0  )? ('returnType' returnType=FunctionType  )? 'statements' '{' statements+=Statement  ("," statements+=Statement  )* '}' ('parameters' '{' parameters+=Parameter  ("," parameters+=Parameter  )* '}' )? '}'  
+    'let' returnType=FunctionType name=ID ('()' | ( '('parameters+=Parameter  ("," parameters+=Parameter  )* ) ')' ) body=Block
 ;
 
-Comment returns Comment:
-    {Comment} 'Comment' '{' ('value' value=String0  )? '}'  
+Block returns Block: '{' statements+=Statement* '}';
+
+Statement returns Statement:
+    (SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | Variable | MovementStmt | RotationStmt | FunctionCallStmt | ReturnStmt)
 ;
 
-SetSpeedStmt returns SetSpeedStmt:
-    'SetSpeedStmt' '{' ('comment' comment=Comment  )? 'value' value=Expression  '}'  
+ReturnStmt returns ReturnStmt: 'return' expr=Expression;
+
+Expression returns Expression: NumeralExpression | BooleanExpression;
+
+NumeralExpression returns ArithmeticOp:
+    expr1=MultiplicativeExpression (operator=('+' | '-') expr2=MultiplicativeExpression)*;
+
+MultiplicativeExpression returns ArithmeticOp:
+    expr1=UnaryExpression (operator=('*' | '/') expr2=UnaryExpression)*
 ;
 
-IfStmt returns IfStmt:
-    'IfStmt' '{' ('comment' comment=Comment  )? ('then' '{' then+=Statement  ("," then+=Statement  )* '}' )? 'condition' condition=Expression  ('else' '{' else+=Statement  ("," else+=Statement  )* '}' )? '}'  
-;
+UnaryExpression returns Expression: (Opposite | NumeralPrimaryExpression);
 
-LoopStmt returns LoopStmt:
-    'LoopStmt' '{' ('comment' comment=Comment  )? ('instruction' '{' instruction+=Statement  ("," instruction+=Statement  )* '}' )? 'condition' condition=Expression  '}'  
-;
+Opposite returns Opposite: '-' expr=NumeralPrimaryExpression;
 
-VariableDeclStmt returns VariableDeclStmt:
-    'VariableDeclStmt' '{' ('newAttribute' newAttribute=VarType  )? ('comment' comment=Comment  )? 'variable' variable=Variable  'initialexpr' initialexpr=Expression  '}'  
-;
-
-MovementStmt returns MovementStmt:
-    'MovementStmt' '{' ('direction' direction=Direction  )? ('comment' comment=Comment  )? 'expr' expr=Expression  '}'  
-;
-
-RotationStmt returns RotationStmt:
-    'RotationStmt' '{' ('rotation' rotation=RotationDirection  )? ('comment' comment=Comment  )? 'degrees' degrees=Expression  '}'  
-;
-
-FunctionCallStmt returns FunctionCallStmt:
-    {FunctionCallStmt} 'FunctionCallStmt' '{' ('voidfct' voidfct=[FunctionDef:STRING ] )? ('comment' comment=Comment  )? ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
-;
-
-String0 returns MyString:
-    'String' 
-;
-
-Unit returns Unit:
-    Unit_NONE | Unit_MM | Unit_CM
-;
-Unit_NONE returns Unit_NONE: 'NONE' ;
-Unit_MM returns Unit_MM: 'MM' ;
-Unit_CM returns Unit_CM: 'CM' ;
+NumeralPrimaryExpression returns Expression: NumeralConst | LiteralExpression;
 
 NumeralConst returns NumeralConst:
-    {NumeralConst} 'NumeralConst' '{' ('unit' unit=Unit  )? ('value' value=Double  )? '}'  
+    {NumeralConst} value=DOUBLE ('in' unit=Unit)?
 ;
 
-VariableRef returns VariableRef:
-    'VariableRef' '{' ('unit' unit=Unit  )? 'decl' decl=[VariableDeclStmt:STRING ] '}'  
+SensorFunctionCall returns SensorFunctionCall:
+    {SensorFunctionCall} ('getDistance()' | 'getTimestamp()') ('in' unit=Unit)?
 ;
 
-ComparisonOp returns ComparisonOp:
-    'ComparisonOp' '{' ('unit' unit=Unit  )? ('operator' operator=ComparisonOperator  )? 'expr1' expr1=Expression  'expr2' expr2=Expression  '}'  
+BooleanExpression returns LogicOp:
+    expr1=AndExpression (operator='or' expr2=AndExpression)*
 ;
 
-BooleanConst returns BooleanConst:
-    {BooleanConst} 'BooleanConst' '{' ('unit' unit=Unit  )? ('value' value=Boolean  )? '}'  
+AndExpression returns LogicOp:
+     expr1=ComparisonExpression (operator='and' expr2=ComparisonExpression)*
 ;
 
-Not returns Not:
-    'Not' '{' ('unit' unit=Unit  )? 'expr' expr=Expression  '}'  
+ComparisonExpression returns ComparisonOp:
+    (expr1=NumeralPrimaryExpression (operator=ComparisonOperator expr2=NumeralPrimaryExpression)?) | BooleanPrimaryExpression
 ;
 
-LogicOp returns LogicOp:
-    'LogicOp' '{' ('unit' unit=Unit  )? ('operator' operator=BooleanOperator  )? 'expr1' expr1=Expression  'expr2' expr2=Expression  '}'  
+BooleanPrimaryExpression returns Expression:
+    BooleanConst | LiteralExpression
 ;
 
-Opposite returns Opposite:
-    'Opposite' '{' ('unit' unit=Unit  )? 'expr' expr=Expression  '}'  
-;
+BooleanConst returns BooleanConst: {BooleanConst} value=BOOLEAN;
 
-ArithmeticOp returns ArithmeticOp:
-    'ArithmeticOp' '{' ('unit' unit=Unit  )? ('operator' operator=ArithmeticOperator  )? 'expr1' expr1=Expression  'expr2' expr2=Expression  '}'  
+Not returns Not: 'not' expr=BooleanPrimaryExpression;
+
+LiteralExpression returns Expression:
+    VariableRef | FunctionCall | Not | '(' Expression ')' | SensorFunctionCall
 ;
 
 FunctionCall returns FunctionCall:
-    'FunctionCall' '{' ('unit' unit=Unit  )? 'ref' ref=[FunctionDef:STRING ] ('parameters' '{' parameters+=Expression  ("," parameters+=Expression  )* '}' )? '}'  
+    ref=[FunctionDef:ID ] ( '()' | '(' parameters+=Expression  ("," parameters+=Expression  )* ')')
+; 
+
+VariableRef returns VariableRef:
+    decl=[Variable:ID]
 ;
 
-Double returns Double:
-    'Double' 
+IfStmt returns IfStmt:
+    'if' condition=Expression 'then' then=Block
+    ( 'else' 'if' condition=Expression 'then' elseif=Block )*
+    ( 'else' else=Block )?
 ;
 
-ComparisonOperator returns ComparisonOperator:
-    ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN
-;
-ComparisonOperator_LOWERTHAN returns ComparisonOperator_LOWERTHAN: 'LOWERTHAN' ;
-ComparisonOperator_LOWERTHANEQUAL returns ComparisonOperator_LOWERTHANEQUAL: 'LOWERTHANEQUAL' ;
-ComparisonOperator_EQUAL returns ComparisonOperator_EQUAL: 'EQUAL' ;
-ComparisonOperator_GREATERTHANEQUAL returns ComparisonOperator_GREATERTHANEQUAL: 'GREATERTHANEQUAL' ;
-ComparisonOperator_GREATERTHAN returns ComparisonOperator_GREATERTHAN: 'GREATERTHAN' ;
+LoopStmt returns LoopStmt: 'loop' condition=Expression block=Block;
 
-Boolean returns Boolean:
-    'Boolean' 
+Variable returns Variable: 
+    'var' type=VarType name=ID '=' variable=VariableValue
 ;
 
-BooleanOperator returns BooleanOperator:
-    BooleanOperator_AND | BooleanOperator_OR
-;
-BooleanOperator_AND returns BooleanOperator_AND: 'AND' ;
-BooleanOperator_OR returns BooleanOperator_OR: 'OR' ;
-
-ArithmeticOperator returns ArithmeticOperator:
-    ArithmeticOperator_PLUS | ArithmeticOperator_MINUS | ArithmeticOperator_MULT | ArithmeticOperator_DIV
-;
-ArithmeticOperator_PLUS returns ArithmeticOperator_PLUS: 'PLUS' ;
-ArithmeticOperator_MINUS returns ArithmeticOperator_MINUS: 'MINUS' ;
-ArithmeticOperator_MULT returns ArithmeticOperator_MULT: 'MULT' ;
-ArithmeticOperator_DIV returns ArithmeticOperator_DIV: 'DIV' ;
-
-Variable returns Variable:
-    {Variable} 'Variable' '{' ('name' name=String0  )? '}'  
+VariableAffStmt returns VariableAffStmt:
+    {VariableAffStmt} decl=[Variable:ID ]  '=' expr=Expression  
 ;
 
-VarType returns VarType:
-    VarType_NUMBER | VarType_BOOLEAN
-;
-VarType_NUMBER returns VarType_NUMBER: 'NUMBER' ;
-VarType_BOOLEAN returns VarType_BOOLEAN: 'BOOLEAN' ;
+MovementStmt returns MovementStmt: direction=Direction expr=Expression;
 
-Direction returns Direction:
-    Direction_FORWARD | Direction_BACKWARD | Direction_LEFT | Direction_RIGHT
-;
-Direction_FORWARD returns Direction_FORWARD: 'FORWARD' ;
-Direction_BACKWARD returns Direction_BACKWARD: 'BACKWARD' ;
-Direction_LEFT returns Direction_LEFT: 'LEFT' ;
-Direction_RIGHT returns Direction_RIGHT: 'RIGHT' ;
+RotationStmt returns RotationStmt: rotation=RotationDirection degrees=Expression;
 
-RotationDirection returns RotationDirection:
-    RotationDirection_CLOCKWISE | RotationDirection_COUNTERCLOCKWISE
-;
-RotationDirection_CLOCKWISE returns RotationDirection_CLOCKWISE: 'CLOCKWISE' ;
-RotationDirection_COUNTERCLOCKWISE returns RotationDirection_COUNTERCLOCKWISE: 'COUNTERCLOCKWISE' ;
+SetSpeedStmt returns SetSpeedStmt: 'setSpeed(' value=Expression ')';
 
-Parameter returns Parameter:
-    {Parameter} 'Parameter' '{' ('name' name=String0  )? ('type' ^type=VarType  )? '}'  
+FunctionCallStmt returns FunctionCallStmt:
+    {FunctionCallStmt} voidfct=[FunctionDef:ID ] ( '()' | '(' parameters+=Expression  ("," parameters+=Expression  )* ')')
 ;
 
-FunctionType returns FunctionType:
-    FunctionType_VOID | FunctionType_NUMBER | FunctionType_BOOLEAN
-;
-FunctionType_VOID returns FunctionType_VOID: 'VOID' ;
-FunctionType_NUMBER returns FunctionType_NUMBER: 'NUMBER' ;
-FunctionType_BOOLEAN returns FunctionType_BOOLEAN: 'BOOLEAN' ;
+Unit returns Unit: 'mm' | 'cm';
 
+ComparisonOperator returns ComparisonOperator: '<' | '<=' | '==' | '>=' | '>' | '!=';
+
+VariableValue returns VariableValue: {VariableValue} value=Expression;
+
+VarType returns VarType: 'number' | 'bool' ;
+
+Direction returns Direction: 'Forward' | 'Backward' | 'Left' | 'Right';
+
+RotationDirection returns RotationDirection: 'Clock' | 'CounterClock';
+
+Parameter returns Parameter: {Parameter} ^type=VarType name=ID;
+
+FunctionType returns FunctionType: VarType | 'void';

@@ -9,7 +9,7 @@ terminal INT returns number:'0' ..'9' +;
 terminal STRING returns string:'"' ('\\' . |  !('\\' | '"' ))*'"'  | "'" ('\\' . |  !('\\' | "'" ))*"'"  ;
 hidden terminal ML_COMMENT returns string: '//' !('\n' | '\r')* ;
 hidden terminal SL_COMMENT returns string:'//'  !('\n' | '\r' )('\r'? '\n' )?  ;
-hidden terminal WS returns string:(' ' | '\t' | '\r' | '\n' )+;
+hidden terminal WS returns string: (' ' | '\t' | '\r' | '\n' )+;
 terminal ANY_OTHER returns string:.;
 
 type VarType = 'number' | 'bool';
@@ -34,18 +34,21 @@ interface RoboProgram {
 }
 
 interface Entrypoint {
-	statement?: Statement
+    body: Block
+}
+
+interface Block {
+    statements?: Statement[]
 }
 
 interface Statement {
-    next?: Statement
 }
 
 interface FunctionDef {
-	statement?: Statement
-	name?: string
+	name: string
 	parameters: Parameter[]
 	returnType: FunctionType
+    body: Block
 }
 
 interface Parameter {
@@ -62,15 +65,19 @@ interface SetSpeedStmt extends Statement {
 }
 
 interface IfStmt extends Statement {
-	then: Statement
 	condition: Expression
-	else?: Statement
-    elseif?: Statement
+	then: Block
+	else?: Block
+    elseif?: Block
+}
+
+interface ReturnStmt extends Statement {
+	expr: Expression
 }
 
 interface LoopStmt extends Statement {
-	instruction: Statement
 	condition: Expression
+	block: Block 
 }
 
 interface Variable extends Statement {
@@ -157,10 +164,21 @@ entry RoboProgram returns RoboProgram:
     entrypoint=Entrypoint   ( function+=FunctionDef  )*
 ;
 
-Statement returns Statement:
-    (SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | Variable | MovementStmt | RotationStmt | FunctionCallStmt) (next=Statement)?
+Entrypoint returns Entrypoint:
+    {Entrypoint} 'let' 'void' 'entry' '()' body=Block
 ;
 
+FunctionDef returns FunctionDef:
+    'let' returnType=FunctionType name=ID ('()' | ( '('parameters+=Parameter  ("," parameters+=Parameter  )* ) ')' ) body=Block
+;
+
+Block returns Block: '{' statements+=Statement* '}';
+
+Statement returns Statement:
+    (SetSpeedStmt | IfStmt | LoopStmt | VariableAffStmt | Variable | MovementStmt | RotationStmt | FunctionCallStmt | ReturnStmt)
+;
+
+ReturnStmt returns ReturnStmt: 'return' expr=Expression;
 
 Expression returns Expression: NumeralExpression | BooleanExpression;
 
@@ -217,23 +235,13 @@ VariableRef returns VariableRef:
     decl=[Variable:ID]
 ;
 
-Entrypoint returns Entrypoint:
-    {Entrypoint} 'let' 'void' 'entry' '()' '{' (statement=Statement)? '}'
-;
-
-FunctionDef returns FunctionDef:
-    'let' returnType=FunctionType name=ID ('()' | ( '('parameters+=Parameter  ("," parameters+=Parameter  )* ) ')' ) '{' (statement=Statement)? '}'
-;
-
 IfStmt returns IfStmt:
-    'if' condition=Expression 'then' '{' then=Statement* '}'
-    ( 'else' 'if' condition=Expression 'then' '{' elseif=Statement* '}' )*
-    ( 'else' '{' else=Statement* '}' )?
+    'if' condition=Expression 'then' then=Block
+    ( 'else' 'if' condition=Expression 'then' elseif=Block )*
+    ( 'else' else=Block )?
 ;
 
-LoopStmt returns LoopStmt:
-    'loop' condition=Expression '{' instruction=Statement  ("," instruction=Statement  )* '}'
-;
+LoopStmt returns LoopStmt: 'loop' condition=Expression block=Block;
 
 Variable returns Variable: 
     'var' type=VarType name=ID '=' variable=VariableValue

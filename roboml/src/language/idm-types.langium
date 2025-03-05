@@ -1,45 +1,18 @@
-import 'XMLType-types'
+type VarType = 'number' | 'bool';
 
-type VarType = VarType_NUMBER | VarType_BOOLEAN;
-type VarType_NUMBER = 'NUMBER';
-type VarType_BOOLEAN = 'BOOLEAN';
+type FunctionType = VarType | 'void';
 
-type FunctionType = FunctionType_VOID | FunctionType_NUMBER | FunctionType_BOOLEAN;
-type FunctionType_VOID = 'VOID';
-type FunctionType_NUMBER = 'NUMBER';
-type FunctionType_BOOLEAN = 'BOOLEAN';
+type Unit = 'mm' | 'cm';
 
-type Unit = Unit_NONE | Unit_MM | Unit_CM;
-type Unit_NONE = 'NONE';
-type Unit_MM = 'MM';
-type Unit_CM = 'CM';
+type Direction = 'Forward' | 'Backward' | 'Left' | 'Right';
 
-type Direction = Direction_FORWARD | Direction_BACKWARD | Direction_LEFT | Direction_RIGHT;
-type Direction_FORWARD = 'FORWARD';
-type Direction_BACKWARD = 'BACKWARD';
-type Direction_LEFT = 'LEFT';
-type Direction_RIGHT = 'RIGHT';
+type RotationDirection = 'Clock' | 'CounterClock';
 
-type RotationDirection = RotationDirection_CLOCKWISE | RotationDirection_COUNTERCLOCKWISE;
-type RotationDirection_CLOCKWISE = 'CLOCKWISE';
-type RotationDirection_COUNTERCLOCKWISE = 'COUNTERCLOCKWISE';
+type ComparisonOperator = '<' | '<=' | '==' | '>=' | '>' | '!=';
 
-type ComparisonOperator = ComparisonOperator_LOWERTHAN | ComparisonOperator_LOWERTHANEQUAL | ComparisonOperator_EQUAL | ComparisonOperator_GREATERTHANEQUAL | ComparisonOperator_GREATERTHAN;
-type ComparisonOperator_LOWERTHAN = 'LOWERTHAN';
-type ComparisonOperator_LOWERTHANEQUAL = 'LOWERTHANEQUAL';
-type ComparisonOperator_EQUAL = 'EQUAL';
-type ComparisonOperator_GREATERTHANEQUAL = 'GREATERTHANEQUAL';
-type ComparisonOperator_GREATERTHAN = 'GREATERTHAN';
+type BooleanOperator = 'and' | 'or';
 
-type BooleanOperator = BooleanOperator_AND | BooleanOperator_OR;
-type BooleanOperator_AND = 'AND';
-type BooleanOperator_OR = 'OR';
-
-type ArithmeticOperator = ArithmeticOperator_PLUS | ArithmeticOperator_MINUS | ArithmeticOperator_MULT | ArithmeticOperator_DIV;
-type ArithmeticOperator_PLUS = 'PLUS';
-type ArithmeticOperator_MINUS = 'MINUS';
-type ArithmeticOperator_MULT = 'MULT';
-type ArithmeticOperator_DIV = 'DIV';
+type ArithmeticOperator = '+' | '-' | '*' | '/';
 
 interface RoboProgram {
 	entrypoint: Entrypoint
@@ -47,26 +20,25 @@ interface RoboProgram {
 }
 
 interface Entrypoint {
-	statements: Statement[]
+    body: Block
+}
+
+interface Block {
+    statements?: Statement[]
 }
 
 interface Statement {
-	comment?: Comment
-}
-
-interface Comment {
-	value?: MyString
 }
 
 interface FunctionDef {
-	statements: Statement[]
-	name?: MyString
+	name: string
 	parameters: Parameter[]
-	returnType?: FunctionType
+	returnType: FunctionType
+    body: Block
 }
 
 interface Parameter {
-	name?: MyString
+	name?: string
 	^type?: VarType
 }
 
@@ -79,24 +51,29 @@ interface SetSpeedStmt extends Statement {
 }
 
 interface IfStmt extends Statement {
-	then: Statement[]
 	condition: Expression
-	else: Statement[]
+	then: Block
+	else?: Block
+    elseif?: Block
+}
+
+interface ReturnStmt extends Statement {
+	expr: Expression
 }
 
 interface LoopStmt extends Statement {
-	instruction: Statement[]
 	condition: Expression
+	block: Block 
 }
 
-interface VariableDeclStmt extends Statement {
-	variable: Variable
-	initialexpr: Expression
-	newAttribute?: VarType
+interface Variable extends Statement {
+    name: string
+	type: VarType
+	variable: VariableValue
 }
 
-interface Variable {
-	name?: MyString
+interface VariableValue {
+    value: Expression 
 }
 
 interface MovementStmt extends Statement {
@@ -115,14 +92,22 @@ interface FunctionCallStmt extends Statement {
 }
 
 interface NumeralConst extends LiteralExpression {
-	value?: Double
+	value?: number
 }
 
 interface LiteralExpression extends Expression {
 }
 
+interface SensorFunctionCall extends LiteralExpression {
+}
+
 interface VariableRef extends LiteralExpression {
-	decl: @VariableDeclStmt
+	decl: @Variable
+}
+
+interface VariableAffStmt extends Statement {
+	decl: @Variable
+    expr: Expression
 }
 
 interface ComparisonOp extends BinaryOp {
@@ -135,7 +120,7 @@ interface BinaryOp extends Expression {
 }
 
 interface BooleanConst extends LiteralExpression {
-	value?: Boolean
+	value?: boolean
 }
 
 interface Not extends UnaryOp {
@@ -160,4 +145,3 @@ interface FunctionCall extends LiteralExpression {
 	ref: @FunctionDef
 	parameters: Expression[]
 }
-
