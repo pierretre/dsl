@@ -20,11 +20,11 @@ interface RoboProgram {
 }
 
 interface Entrypoint {
-    body: Block
+	body: Block
 }
 
 interface Block {
-    statements?: Statement[]
+	statements?: Statement[]
 }
 
 interface Statement {
@@ -34,7 +34,7 @@ interface FunctionDef {
 	name: string
 	parameters: Variable[]
 	returnType: FunctionType
-    body: Block
+	body: Block
 }
 
 interface Expression {
@@ -49,7 +49,7 @@ interface IfStmt extends Statement {
 	condition: Expression
 	then: Block
 	else?: Block
-    elseif?: Block
+	elseif?: Block
 }
 
 interface ReturnStmt extends Statement {
@@ -58,17 +58,17 @@ interface ReturnStmt extends Statement {
 
 interface LoopStmt extends Statement {
 	condition: Expression
-	block: Block 
+	block: Block
 }
 
 interface Variable {
-    name: string
+	name: string
 	type: VarType
 	value?: VariableValue
 }
 
 interface VariableValue {
-    value: Expression 
+	value: Expression
 }
 
 interface MovementStmt extends Statement {
@@ -102,16 +102,16 @@ interface VariableRef extends LiteralExpression {
 
 interface VariableAffStmt extends Statement {
 	decl: @Variable
-    expr: Expression
+	expr: Expression
 }
 
 interface ComparisonOp extends BinaryOp {
-	operator?: ComparisonOperator
+	operator: ComparisonOperator
 }
 
 interface BinaryOp extends Expression {
-	expr1: Expression
-	expr2: Expression
+	left: Expression
+	right: Expression
 }
 
 interface BooleanConst extends LiteralExpression {
@@ -126,14 +126,14 @@ interface UnaryOp extends Expression {
 }
 
 interface LogicOp extends BinaryOp {
-	operator?: BooleanOperator
+	operator: BooleanOperator
 }
 
 interface Opposite extends UnaryOp {
 }
 
 interface ArithmeticOp extends BinaryOp {
-	operator?: ArithmeticOperator
+	operator: ArithmeticOperator
 }
 
 interface FunctionCall extends LiteralExpression {

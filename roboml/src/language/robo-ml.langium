@@ -33,10 +33,10 @@ Expression returns Expression:
     NumeralExpression | BooleanExpression;
 
 NumeralExpression returns ArithmeticOp:
-    expr1=MultiplicativeExpression (operator=('+' | '-') expr2=MultiplicativeExpression)*;
+    left=MultiplicativeExpression (operator=('+' | '-') right=MultiplicativeExpression)*;
 
 MultiplicativeExpression returns ArithmeticOp:
-    expr1=UnaryExpression (operator=('*' | '/') expr2=UnaryExpression)*
+    left=UnaryExpression (operator=('*' | '/') right=UnaryExpression)*
 ;
 
 UnaryExpression returns Expression:
@@ -57,15 +57,15 @@ SensorFunctionCall returns SensorFunctionCall:
 ;
 
 BooleanExpression returns LogicOp:
-    expr1=AndExpression (operator='or' expr2=AndExpression)*
+    left=AndExpression (operator='or' right=AndExpression)*
 ;
 
 AndExpression returns LogicOp:
-    expr1=ComparisonExpression (operator='and' expr2=ComparisonExpression)*
+    left=ComparisonExpression (operator='and' right=ComparisonExpression)*
 ;
 
 ComparisonExpression returns ComparisonOp:
-    (expr1=NumeralPrimaryExpression (operator=ComparisonOperator expr2=NumeralPrimaryExpression)?) | BooleanPrimaryExpression
+    (left=NumeralPrimaryExpression (operator=ComparisonOperator right=NumeralPrimaryExpression)?) | BooleanPrimaryExpression
 ;
 
 BooleanPrimaryExpression returns Expression:

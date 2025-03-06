@@ -12,7 +12,7 @@ export function registerValidationChecks(services: RoboMlServices) {
         RoboProgram: [
             validator.checkUniqueDefs,
             validator.checkFunctionReturns,
-            validator.checkFunctionParameters,
+            validator.checkFunctionParametersCallMatchDef,
         ],
         FunctionDef: validator.checkUniqueParams
     };
@@ -114,7 +114,7 @@ export class RoboMlValidator {
         return "void";
     }
 
-    checkFunctionParameters(model: RoboProgram, accept: ValidationAcceptor): void {
+    checkFunctionParametersCallMatchDef(model: RoboProgram, accept: ValidationAcceptor): void {
         model.defs.forEach(func => {
             func.parameters.forEach(param => {
                 if (param.type !== 'number' && param.type !== 'bool') {
