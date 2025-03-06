@@ -30,7 +30,7 @@ type ArithmeticOperator = '+' | '-' | '*' | '/';
 
 interface RoboProgram {
 	entrypoint: Entrypoint
-	function: FunctionDef[]
+	defs: FunctionDef[]
 }
 
 interface Entrypoint {
@@ -161,7 +161,7 @@ interface FunctionCall extends LiteralExpression {
 }
 
 entry RoboProgram returns RoboProgram:
-    entrypoint=Entrypoint   ( function+=FunctionDef  )*
+    entrypoint=Entrypoint defs+=FunctionDef*
 ;
 
 Entrypoint returns Entrypoint:

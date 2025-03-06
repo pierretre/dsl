@@ -6,7 +6,7 @@ import 'idm-types'
 import 'XMLType-types'
 
 entry RoboProgram returns RoboProgram:
-    entrypoint=Entrypoint   ( function+=FunctionDef  )*
+    entrypoint=Entrypoint   defs+=FunctionDef*
 ;
 
 Entrypoint returns Entrypoint:
@@ -16,6 +16,8 @@ Entrypoint returns Entrypoint:
 FunctionDef returns FunctionDef:
     'let' returnType=FunctionType name=ID ('()' | ( '('parameters+=Parameter  ("," parameters+=Parameter  )* ) ')' ) body=Block
 ;
+
+Parameter returns Variable: type=VarType name=ID;
 
 Block returns Block: '{' statements+=Statement* '}';
 
@@ -88,13 +90,9 @@ IfStmt returns IfStmt:
 
 LoopStmt returns LoopStmt: 'loop' condition=Expression block=Block;
 
-Variable returns Variable: 
-    'var' type=VarType name=ID '=' variable=VariableValue
-;
+Variable returns Variable: 'var' type=VarType name=ID '=' value=VariableValue;
 
-VariableAffStmt returns VariableAffStmt:
-    {VariableAffStmt} decl=[Variable:ID ]  '=' expr=Expression  
-;
+VariableAffStmt returns VariableAffStmt: {VariableAffStmt} decl=[Variable:ID] '=' expr=Expression;
 
 MovementStmt returns MovementStmt: direction=Direction expr=Expression;
 
@@ -117,7 +115,5 @@ VarType returns VarType: 'number' | 'bool' ;
 Direction returns Direction: 'Forward' | 'Backward' | 'Left' | 'Right';
 
 RotationDirection returns RotationDirection: 'Clock' | 'CounterClock';
-
-Parameter returns Parameter: {Parameter} ^type=VarType name=ID;
 
 FunctionType returns FunctionType: VarType | 'void';

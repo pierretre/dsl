@@ -1,6 +1,6 @@
 import { type Module, inject } from 'langium';
 import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
-import { RoboMlGeneratedModule, RoboMlGeneratedSharedModule } from './generated/module.js';
+import { RoboMLGeneratedModule, RoboMlGeneratedSharedModule } from './generated/module.js';
 import { RoboMlValidator, registerValidationChecks } from './robo-ml-validator.js';
 
 /**
@@ -54,7 +54,7 @@ export function createRoboMlServices(context: DefaultSharedModuleContext): {
     );
     const RoboMl = inject(
         createDefaultModule({ shared }),
-        RoboMlGeneratedModule,
+        RoboMLGeneratedModule,
         RoboMlModule
     );
     shared.ServiceRegistry.register(RoboMl);

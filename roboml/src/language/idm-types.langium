@@ -16,7 +16,7 @@ type ArithmeticOperator = '+' | '-' | '*' | '/';
 
 interface RoboProgram {
 	entrypoint: Entrypoint
-	function: FunctionDef[]
+	defs: FunctionDef[]
 }
 
 interface Entrypoint {
@@ -32,14 +32,9 @@ interface Statement {
 
 interface FunctionDef {
 	name: string
-	parameters: Parameter[]
+	parameters: Variable[]
 	returnType: FunctionType
     body: Block
-}
-
-interface Parameter {
-	name?: string
-	^type?: VarType
 }
 
 interface Expression {
@@ -66,10 +61,10 @@ interface LoopStmt extends Statement {
 	block: Block 
 }
 
-interface Variable extends Statement {
+interface Variable {
     name: string
 	type: VarType
-	variable: VariableValue
+	value?: VariableValue
 }
 
 interface VariableValue {
