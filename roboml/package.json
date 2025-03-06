@@ -22,7 +22,8 @@
         "dev": "vite",
         "dev:debug": "vite --debug --force",
         "serve": "npm run dev",
-        "test": "vitest run"
+        "test": "vitest run",
+        "langium:visitor": "langium-visitor"
     },
     "dependencies": {
         "@codingame/monaco-vscode-editor-service-override": "~3.2.3",
@@ -50,6 +51,7 @@
         "eslint": "~8.57.0",
         "http-server": "~14.1.1",
         "langium-cli": "~3.3.0",
+        "langium-visitor": "^1.4.0",
         "typescript": "~5.1.6",
         "vite": "~5.2.7",
         "vitest": "~1.4.0"

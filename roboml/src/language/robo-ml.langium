@@ -90,13 +90,13 @@ VariableRef returns VariableRef:
 ;
 
 IfStmt returns IfStmt:
-    'if' condition=Expression 'then' then=Block
+    'if' condition=Expression 'then' thenBlock=Block
     (elseif+=ElseIf)*
-    ( 'else' else=Block )?
+    ( 'else' elseBlock=Block )?
 ;
 
 ElseIf returns ElseIf:
-    'else' 'if' condition=Expression 'then' then=Block;
+    'else' 'if' condition=Expression 'then' thenBlock=Block;
 
 LoopStmt returns LoopStmt:
     'loop' condition=Expression block=Block;

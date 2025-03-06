@@ -47,14 +47,14 @@ interface SetSpeedStmt extends Statement {
 
 interface IfStmt extends Statement {
 	condition: Expression
-	then: Block
-	else?: Block
+	thenBlock: Block
+	elseBlock?: Block
 	elseif: ElseIf[]
 }
 
 interface ElseIf {
 	condition: Expression
-	then: Block
+	thenBlock: Block
 }
 
 interface ReturnStmt extends Statement {

@@ -70,8 +70,8 @@ export class RoboMlValidator {
             }
 
             if (isIfStmt(stmt)) {
-                const thenHasReturn = this.hasValidReturn(stmt.then, expectedType, accept, func);
-                const elseHasReturn = stmt.else ? this.hasValidReturn(stmt.else, expectedType, accept, func) : false;
+                const thenHasReturn = this.hasValidReturn(stmt.thenBlock, expectedType, accept, func);
+                const elseHasReturn = stmt.elseBlock ? this.hasValidReturn(stmt.elseBlock, expectedType, accept, func) : false;
 
                 if (thenHasReturn && elseHasReturn) {
                     hasReturn = true;
@@ -169,9 +169,9 @@ export class RoboMlValidator {
             }
 
             if (isIfStmt(stmt)) {
-                this.checkFunctionCallsInBlock(stmt.then, functionMap, accept);
-                if (stmt.else) this.checkFunctionCallsInBlock(stmt.else, functionMap, accept);
-                stmt.elseif.forEach(ei => this.checkFunctionCallsInBlock(ei.then, functionMap, accept));
+                this.checkFunctionCallsInBlock(stmt.thenBlock, functionMap, accept);
+                if (stmt.elseBlock) this.checkFunctionCallsInBlock(stmt.elseBlock, functionMap, accept);
+                stmt.elseif.forEach(ei => this.checkFunctionCallsInBlock(ei.thenBlock, functionMap, accept));
             }
 
             if (isLoopStmt(stmt)) {
