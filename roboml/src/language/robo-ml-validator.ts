@@ -135,7 +135,9 @@ export class RoboMlValidator {
             this.checkFunctionCallsInBlock(func.body, functionMap, accept);
         });
 
-        this.checkFunctionCallsInBlock(model.entrypoint.body, functionMap, accept);
+        if (model.entrypoint) {
+            this.checkFunctionCallsInBlock(model.entrypoint.body, functionMap, accept);
+        }
     }
 
     private checkFunctionCallsInBlock(block: Block | undefined, functionMap: Map<string, FunctionDef>, accept: ValidationAcceptor): void {

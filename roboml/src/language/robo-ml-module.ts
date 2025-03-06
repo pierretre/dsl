@@ -3,7 +3,7 @@ import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModul
 import { RoboMLGeneratedModule, RoboMlGeneratedSharedModule } from './generated/module.js';
 import { RoboMlValidator, registerValidationChecks } from './robo-ml-validator.js';
 import { RoboMlAcceptWeaver } from '../semantics/robo-ml-accept-weaver.js';
-import { RobMlInterpreter } from '../semantics/interpreter.js';
+import { RoboMlInterpreter } from '../semantics/interpreter.js';
 import { registerVisitorAsValidator } from '../semantics/robo-ml-visitor.js';
 
 /**
@@ -15,7 +15,7 @@ export type RoboMlAddedServices = {
     },
     visitors: {
         RoboMlAcceptWeaver: RoboMlAcceptWeaver,
-        RoboMlInterpreter: RobMlInterpreter,
+        RoboMlInterpreter: RoboMlInterpreter,
     }
 }
 
@@ -36,7 +36,7 @@ export const RoboMlModule: Module<RoboMlServices, PartialLangiumServices & RoboM
     },
     visitors: {
         RoboMlAcceptWeaver: (services) => new RoboMlAcceptWeaver(services),
-        RoboMlInterpreter: () => new RobMlInterpreter(),
+        RoboMlInterpreter: () => new RoboMlInterpreter(),
     }
 };
 

@@ -18,6 +18,7 @@ export function setup(client: MonacoLanguageClient, uri: string) {
     var validModal = document.getElementById("validModal")! as HTMLElement;
     var closeError = document.querySelector("#errorModal .close")! as HTMLElement;
     var closeValid = document.querySelector("#validModal .close")! as HTMLElement;
+
     closeError.onclick = function () {
         errorModal.style.display = "none";
     }
@@ -32,10 +33,6 @@ export function setup(client: MonacoLanguageClient, uri: string) {
             errorModal.style.display = "none";
         }
     }
-
-    const hello = (async (person: string) => {
-        console.log(`Hello ${person}!`)
-    });
 
     const typecheck = (async (input: any) => {
         console.info('typechecking current code...');
@@ -54,7 +51,13 @@ export function setup(client: MonacoLanguageClient, uri: string) {
     });
 
     const execute = (async (scene: Scene) => {
-        setupSimulator(scene);
+        if (scene) {
+            console.log("execute !")
+            setupSimulator(scene);
+        } else {
+            console.log("send ayo")
+            client.sendNotification('custom/execute', uri);
+        }
     });
 
     function setupSimulator(scene: Scene) {
@@ -96,14 +99,9 @@ export function setup(client: MonacoLanguageClient, uri: string) {
     }
 
     // Listen to custom notifications coming from the server, here to call the "test" function
-    client.onNotification('custom/hello', hello);
-
-    // Listen to the button click to notify the server to hello the code
-    // win.hello is called in the index.html file, line 13
-    win.hello = () => client.sendNotification('custom/hello');
+    client.onNotification('custom/result', execute);
 
     win.parseAndValidate = typecheck;
-    win.parseAndValidate = () => client.sendNotification('custom/hello',);
+    win.parseAndValidate = () => client.sendNotification('custom/validate', uri);
     win.execute = execute;
-    win.execute = typecheck;
 }
