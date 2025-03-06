@@ -2,13 +2,18 @@ import { type Module, inject } from 'langium';
 import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
 import { RoboMLGeneratedModule, RoboMlGeneratedSharedModule } from './generated/module.js';
 import { RoboMlValidator, registerValidationChecks } from './robo-ml-validator.js';
+import { RoboMlAcceptWeaver } from '../semantics/robo-ml-accept-weaver.js';
+import { RobMlInterpreter } from '../semantics/interpreter.js';
+import { registerVisitorAsValidator } from '../semantics/robo-ml-visitor.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
  */
 export type RoboMlAddedServices = {
     validation: {
-        RoboMlValidator: RoboMlValidator
+        RoboMlAcceptWeaver: RoboMlAcceptWeaver,
+        RoboMlInterpreter: RobMlInterpreter,
+        RoboMlValidator: RoboMlValidator,
     }
 }
 
@@ -25,7 +30,9 @@ export type RoboMlServices = LangiumServices & RoboMlAddedServices
  */
 export const RoboMlModule: Module<RoboMlServices, PartialLangiumServices & RoboMlAddedServices> = {
     validation: {
-        RoboMlValidator: () => new RoboMlValidator()
+        RoboMlAcceptWeaver: (services) => new RoboMlAcceptWeaver(services),
+        RoboMlInterpreter: () => new RobMlInterpreter(),
+        RoboMlValidator: () => new RoboMlValidator(),
     }
 };
 
@@ -59,6 +66,10 @@ export function createRoboMlServices(context: DefaultSharedModuleContext): {
     );
     shared.ServiceRegistry.register(RoboMl);
     registerValidationChecks(RoboMl);
+
+    RoboMl.validation.RoboMlAcceptWeaver;
+    registerVisitorAsValidator(RoboMl.validation.RoboMlInterpreter, RoboMl);
+
     if (!context.connection) {
         // We don't run inside a language server
         // Therefore, initialize the configuration provider instantly
