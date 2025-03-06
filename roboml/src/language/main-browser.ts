@@ -17,7 +17,9 @@ startLanguageServer(shared);
 
 function getModelFromUri(uri: string): RoboProgram | undefined {
     const document = shared.workspace.LangiumDocuments.getDocument(URI.parse(uri));
+    console.log("on notif: ", uri);
     if (document && document.diagnostics === undefined || document?.diagnostics?.filter((i) => i.severity === 1).length === 0) {
+        console.log("is valid !");
         return document.parseResult.value as RoboProgram;
     }
     return undefined;

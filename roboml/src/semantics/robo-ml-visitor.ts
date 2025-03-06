@@ -4,7 +4,7 @@
  ******************************************************************************/
 
 import * as ASTInterfaces from '../language/generated/ast.js';
-import { LangiumCoreServices, ValidationAcceptor, ValidationChecks } from 'langium';
+import { LangiumCoreServices, Reference, ValidationAcceptor, ValidationChecks } from 'langium';
 
 /**
  * This interface is used to define the visitor methods for the RoboMl language.
@@ -106,235 +106,333 @@ export function registerVisitorAsValidator<T extends RoboMlValidationVisitor>(vi
 }
 
 
-/* Each concrete interfaces in the `ast.js` file have an equivalent generated type with the same properties but also with an `accept` method.
- * While the generated accept-weaver allows us to dynamically add the `accept` function to Langium's types, these types allow it to exist statically, so we can take advantage of TypeScript's typing.
- * The references are overrided to use the visitor types instead of the Langium interfaces/types.
+/* Each concrete interfaces in the `ast.js` file have an equivalent generated class with the same properties but also with an `accept` method.
+ * While the generated accept-weaver allows us to dynamically add the `accept` function to Langium's types, these classes allow it to exist statically, so we can take advantage of TypeScript's typing.
  * Nevertheless, the two are strictly equivalent, and conversion from one to the other is made possible thanks to duck-typing.
  */
 
-type Acceptor = {
-    accept: (visitor: RoboMlVisitor) => any;
+export class Block implements ASTInterfaces.Block {
+    
+    constructor(public $type: 'Block', public $container: ElseIf | Entrypoint | FunctionDef | IfStmt | LoopStmt, public statements: Statement[]) {
+    }
+    
+     accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitBlock(this);
+    }
 }
 
-function isAcceptor(node: unknown): node is Acceptor {
-    return typeof (node as any).accept === 'function';
+export class ElseIf implements ASTInterfaces.ElseIf {
+    
+    constructor(public $type: 'ElseIf', public $container: IfStmt, public condition: Expression, public thenBlock: Block) {
+    }
+    
+     accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitElseIf(this);
+    }
 }
 
-
-export type Block = Acceptor & ASTInterfaces.Block
-
-export function isBlock(node: unknown): node is Block {
-    return ASTInterfaces.isBlock(node) && isAcceptor(node);
+export class Entrypoint implements ASTInterfaces.Entrypoint {
+    
+    constructor(public $type: 'Entrypoint', public $container: RoboProgram, public body: Block) {
+    }
+    
+     accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitEntrypoint(this);
+    }
 }
 
-
-export type ElseIf = Acceptor & ASTInterfaces.ElseIf
-
-export function isElseIf(node: unknown): node is ElseIf {
-    return ASTInterfaces.isElseIf(node) && isAcceptor(node);
+export class Expression implements ASTInterfaces.Expression {
+    
+    constructor(public $type: 'Expression' | 'BinaryOp' | 'ArithmeticOp' | 'ComparisonOp' | 'LogicOp' | 'LiteralExpression' | 'BooleanConst' | 'FunctionCall' | 'NumeralConst' | 'SensorFunctionCall' | 'VariableRef' | 'UnaryOp' | 'Not' | 'Opposite', public unit: Unit) {
+    }
+    
+     accept(visitor: RoboMlVisitor) : any {
+    }
 }
 
-
-export type Entrypoint = Acceptor & ASTInterfaces.Entrypoint
-
-export function isEntrypoint(node: unknown): node is Entrypoint {
-    return ASTInterfaces.isEntrypoint(node) && isAcceptor(node);
+export class BinaryOp extends Expression implements ASTInterfaces.BinaryOp {
+    
+    constructor(public override $type: 'BinaryOp' | 'ArithmeticOp' | 'ComparisonOp' | 'LogicOp', public override unit: Unit, public left: Expression, public right: Expression) {
+        super($type, unit);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+    }
 }
 
-
-export type Expression = Acceptor & ASTInterfaces.Expression
-
-export function isExpression(node: unknown): node is Expression {
-    return ASTInterfaces.isExpression(node) && isAcceptor(node);
+export class ArithmeticOp extends BinaryOp implements ASTInterfaces.ArithmeticOp {
+    
+    constructor(public override $type: 'ArithmeticOp', public override unit: Unit, public override left: Expression, public override right: Expression, public operator: ArithmeticOperator) {
+        super($type, unit, left, right);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitArithmeticOp(this);
+    }
 }
 
-
-export type BinaryOp = Acceptor & ASTInterfaces.BinaryOp
-
-export function isBinaryOp(node: unknown): node is BinaryOp {
-    return ASTInterfaces.isBinaryOp(node) && isAcceptor(node);
+export class ComparisonOp extends BinaryOp implements ASTInterfaces.ComparisonOp {
+    
+    constructor(public override $type: 'ComparisonOp', public override unit: Unit, public override left: Expression, public override right: Expression, public operator: ComparisonOperator) {
+        super($type, unit, left, right);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitComparisonOp(this);
+    }
 }
 
-
-export type ArithmeticOp = Acceptor & ASTInterfaces.ArithmeticOp
-
-export function isArithmeticOp(node: unknown): node is ArithmeticOp {
-    return ASTInterfaces.isArithmeticOp(node) && isAcceptor(node);
+export class LogicOp extends BinaryOp implements ASTInterfaces.LogicOp {
+    
+    constructor(public override $type: 'LogicOp', public override unit: Unit, public override left: Expression, public override right: Expression, public operator: BooleanOperator) {
+        super($type, unit, left, right);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitLogicOp(this);
+    }
 }
 
-
-export type ComparisonOp = Acceptor & ASTInterfaces.ComparisonOp
-
-export function isComparisonOp(node: unknown): node is ComparisonOp {
-    return ASTInterfaces.isComparisonOp(node) && isAcceptor(node);
+export class LiteralExpression extends Expression implements ASTInterfaces.LiteralExpression {
+    
+    constructor(public override $type: 'LiteralExpression' | 'BooleanConst' | 'FunctionCall' | 'NumeralConst' | 'SensorFunctionCall' | 'VariableRef', public override unit: Unit) {
+        super($type, unit);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+    }
 }
 
-
-export type LogicOp = Acceptor & ASTInterfaces.LogicOp
-
-export function isLogicOp(node: unknown): node is LogicOp {
-    return ASTInterfaces.isLogicOp(node) && isAcceptor(node);
+export class BooleanConst extends LiteralExpression implements ASTInterfaces.BooleanConst {
+    
+    constructor(public override $type: 'BooleanConst', public override unit: Unit, public value: boolean) {
+        super($type, unit);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitBooleanConst(this);
+    }
 }
 
-
-export type LiteralExpression = Acceptor & ASTInterfaces.LiteralExpression
-
-export function isLiteralExpression(node: unknown): node is LiteralExpression {
-    return ASTInterfaces.isLiteralExpression(node) && isAcceptor(node);
+export class FunctionCall extends LiteralExpression implements ASTInterfaces.FunctionCall {
+    
+    constructor(public override $type: 'FunctionCall', public override unit: Unit, public ref: Reference<FunctionDef>, public parameters: Expression[]) {
+        super($type, unit);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitFunctionCall(this);
+    }
 }
 
-
-export type BooleanConst = Acceptor & ASTInterfaces.BooleanConst
-
-export function isBooleanConst(node: unknown): node is BooleanConst {
-    return ASTInterfaces.isBooleanConst(node) && isAcceptor(node);
+export class NumeralConst extends LiteralExpression implements ASTInterfaces.NumeralConst {
+    
+    constructor(public override $type: 'NumeralConst', public override unit: Unit, public value: number) {
+        super($type, unit);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitNumeralConst(this);
+    }
 }
 
-
-export type FunctionCall = Acceptor & ASTInterfaces.FunctionCall
-
-export function isFunctionCall(node: unknown): node is FunctionCall {
-    return ASTInterfaces.isFunctionCall(node) && isAcceptor(node);
+export class SensorFunctionCall extends LiteralExpression implements ASTInterfaces.SensorFunctionCall {
+    
+    constructor(public override $type: 'SensorFunctionCall', public override unit: Unit) {
+        super($type, unit);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitSensorFunctionCall(this);
+    }
 }
 
-
-export type NumeralConst = Acceptor & ASTInterfaces.NumeralConst
-
-export function isNumeralConst(node: unknown): node is NumeralConst {
-    return ASTInterfaces.isNumeralConst(node) && isAcceptor(node);
+export class VariableRef extends LiteralExpression implements ASTInterfaces.VariableRef {
+    
+    constructor(public override $type: 'VariableRef', public override unit: Unit, public decl: Reference<Variable>) {
+        super($type, unit);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitVariableRef(this);
+    }
 }
 
-
-export type SensorFunctionCall = Acceptor & ASTInterfaces.SensorFunctionCall
-
-export function isSensorFunctionCall(node: unknown): node is SensorFunctionCall {
-    return ASTInterfaces.isSensorFunctionCall(node) && isAcceptor(node);
+export class UnaryOp extends Expression implements ASTInterfaces.UnaryOp {
+    
+    constructor(public override $type: 'UnaryOp' | 'Not' | 'Opposite', public override unit: Unit, public expr: Expression) {
+        super($type, unit);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+    }
 }
 
-
-export type VariableRef = Acceptor & ASTInterfaces.VariableRef
-
-export function isVariableRef(node: unknown): node is VariableRef {
-    return ASTInterfaces.isVariableRef(node) && isAcceptor(node);
+export class Not extends UnaryOp implements ASTInterfaces.Not {
+    
+    constructor(public override $type: 'Not', public override unit: Unit, public override expr: Expression) {
+        super($type, unit, expr);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitNot(this);
+    }
 }
 
-
-export type UnaryOp = Acceptor & ASTInterfaces.UnaryOp
-
-export function isUnaryOp(node: unknown): node is UnaryOp {
-    return ASTInterfaces.isUnaryOp(node) && isAcceptor(node);
+export class Opposite extends UnaryOp implements ASTInterfaces.Opposite {
+    
+    constructor(public override $type: 'Opposite', public override unit: Unit, public override expr: Expression) {
+        super($type, unit, expr);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitOpposite(this);
+    }
 }
 
-
-export type Not = Acceptor & ASTInterfaces.Not
-
-export function isNot(node: unknown): node is Not {
-    return ASTInterfaces.isNot(node) && isAcceptor(node);
+export class FunctionDef implements ASTInterfaces.FunctionDef {
+    
+    constructor(public $type: 'FunctionDef', public $container: RoboProgram, public name: string, public parameters: Variable[], public returnType: FunctionType, public body: Block) {
+    }
+    
+     accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitFunctionDef(this);
+    }
 }
 
-
-export type Opposite = Acceptor & ASTInterfaces.Opposite
-
-export function isOpposite(node: unknown): node is Opposite {
-    return ASTInterfaces.isOpposite(node) && isAcceptor(node);
+export class RoboProgram implements ASTInterfaces.RoboProgram {
+    
+    constructor(public $type: 'RoboProgram', public entrypoint: Entrypoint, public defs: FunctionDef[]) {
+    }
+    
+     accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitRoboProgram(this);
+    }
 }
 
-
-export type FunctionDef = Acceptor & ASTInterfaces.FunctionDef
-
-export function isFunctionDef(node: unknown): node is FunctionDef {
-    return ASTInterfaces.isFunctionDef(node) && isAcceptor(node);
+export class Statement implements ASTInterfaces.Statement {
+    
+    constructor(public $type: 'Statement' | 'FunctionCallStmt' | 'IfStmt' | 'LoopStmt' | 'MovementStmt' | 'ReturnStmt' | 'RotationStmt' | 'SetSpeedStmt' | 'VariableAffStmt') {
+    }
+    
+     accept(visitor: RoboMlVisitor) : any {
+    }
 }
 
-
-export type RoboProgram = Acceptor & ASTInterfaces.RoboProgram
-
-export function isRoboProgram(node: unknown): node is RoboProgram {
-    return ASTInterfaces.isRoboProgram(node) && isAcceptor(node);
+export class FunctionCallStmt extends Statement implements ASTInterfaces.FunctionCallStmt {
+    
+    constructor(public override $type: 'FunctionCallStmt', public parameters: Expression[], public voidfct: Reference<FunctionDef>) {
+        super($type);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitFunctionCallStmt(this);
+    }
 }
 
-
-export type Statement = Acceptor & ASTInterfaces.Statement
-
-export function isStatement(node: unknown): node is Statement {
-    return ASTInterfaces.isStatement(node) && isAcceptor(node);
+export class IfStmt extends Statement implements ASTInterfaces.IfStmt {
+    
+    constructor(public override $type: 'IfStmt', public condition: Expression, public thenBlock: Block, public elseBlock: Block, public elseif: ElseIf[]) {
+        super($type);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitIfStmt(this);
+    }
 }
 
-
-export type FunctionCallStmt = Acceptor & ASTInterfaces.FunctionCallStmt
-
-export function isFunctionCallStmt(node: unknown): node is FunctionCallStmt {
-    return ASTInterfaces.isFunctionCallStmt(node) && isAcceptor(node);
+export class LoopStmt extends Statement implements ASTInterfaces.LoopStmt {
+    
+    constructor(public override $type: 'LoopStmt', public condition: Expression, public block: Block) {
+        super($type);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitLoopStmt(this);
+    }
 }
 
-
-export type IfStmt = Acceptor & ASTInterfaces.IfStmt
-
-export function isIfStmt(node: unknown): node is IfStmt {
-    return ASTInterfaces.isIfStmt(node) && isAcceptor(node);
+export class MovementStmt extends Statement implements ASTInterfaces.MovementStmt {
+    
+    constructor(public override $type: 'MovementStmt', public direction: Direction, public expr: Expression) {
+        super($type);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitMovementStmt(this);
+    }
 }
 
-
-export type LoopStmt = Acceptor & ASTInterfaces.LoopStmt
-
-export function isLoopStmt(node: unknown): node is LoopStmt {
-    return ASTInterfaces.isLoopStmt(node) && isAcceptor(node);
+export class ReturnStmt extends Statement implements ASTInterfaces.ReturnStmt {
+    
+    constructor(public override $type: 'ReturnStmt', public expr: Expression) {
+        super($type);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitReturnStmt(this);
+    }
 }
 
-
-export type MovementStmt = Acceptor & ASTInterfaces.MovementStmt
-
-export function isMovementStmt(node: unknown): node is MovementStmt {
-    return ASTInterfaces.isMovementStmt(node) && isAcceptor(node);
+export class RotationStmt extends Statement implements ASTInterfaces.RotationStmt {
+    
+    constructor(public override $type: 'RotationStmt', public rotation: RotationDirection, public degrees: Expression) {
+        super($type);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitRotationStmt(this);
+    }
 }
 
-
-export type ReturnStmt = Acceptor & ASTInterfaces.ReturnStmt
-
-export function isReturnStmt(node: unknown): node is ReturnStmt {
-    return ASTInterfaces.isReturnStmt(node) && isAcceptor(node);
+export class SetSpeedStmt extends Statement implements ASTInterfaces.SetSpeedStmt {
+    
+    constructor(public override $type: 'SetSpeedStmt', public value: Expression) {
+        super($type);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitSetSpeedStmt(this);
+    }
 }
 
-
-export type RotationStmt = Acceptor & ASTInterfaces.RotationStmt
-
-export function isRotationStmt(node: unknown): node is RotationStmt {
-    return ASTInterfaces.isRotationStmt(node) && isAcceptor(node);
+export class VariableAffStmt extends Statement implements ASTInterfaces.VariableAffStmt {
+    
+    constructor(public override $type: 'VariableAffStmt', public decl: Reference<Variable>, public expr: Expression) {
+        super($type);
+    }
+    
+    override accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitVariableAffStmt(this);
+    }
 }
 
-
-export type SetSpeedStmt = Acceptor & ASTInterfaces.SetSpeedStmt
-
-export function isSetSpeedStmt(node: unknown): node is SetSpeedStmt {
-    return ASTInterfaces.isSetSpeedStmt(node) && isAcceptor(node);
+export class Variable implements ASTInterfaces.Variable {
+    
+    constructor(public $type: 'Variable', public $container: FunctionDef, public name: string, public type: VarType, public value: VariableValue) {
+    }
+    
+     accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitVariable(this);
+    }
 }
 
-
-export type VariableAffStmt = Acceptor & ASTInterfaces.VariableAffStmt
-
-export function isVariableAffStmt(node: unknown): node is VariableAffStmt {
-    return ASTInterfaces.isVariableAffStmt(node) && isAcceptor(node);
-}
-
-
-export type Variable = Acceptor & ASTInterfaces.Variable
-
-export function isVariable(node: unknown): node is Variable {
-    return ASTInterfaces.isVariable(node) && isAcceptor(node);
-}
-
-
-export type VariableValue = Acceptor & ASTInterfaces.VariableValue
-
-export function isVariableValue(node: unknown): node is VariableValue {
-    return ASTInterfaces.isVariableValue(node) && isAcceptor(node);
+export class VariableValue implements ASTInterfaces.VariableValue {
+    
+    constructor(public $type: 'VariableValue', public $container: Variable, public value: Expression) {
+    }
+    
+     accept(visitor: RoboMlVisitor) : any {
+        return visitor.visitVariableValue(this);
+    }
 }
 
 
 /*
  * Each union type in the `ast.js` file have an equivalent generated type but using the visitor classes instead of the Langium interfaces/types.
- * This type is used to propose the `accept` method of their generated types.
+ * This type is used to propose the `accept` method of their generated classes.
  */
+
 
 export type ArithmeticOperator = '+' | '-' | '*' | '/';
 

@@ -103,6 +103,7 @@ export function setup(client: MonacoLanguageClient, uri: string) {
     win.hello = () => client.sendNotification('custom/hello');
 
     win.parseAndValidate = typecheck;
+    win.parseAndValidate = () => client.sendNotification('custom/hello',);
     win.execute = execute;
     win.execute = typecheck;
 }

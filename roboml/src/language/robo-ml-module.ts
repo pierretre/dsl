@@ -11,9 +11,11 @@ import { registerVisitorAsValidator } from '../semantics/robo-ml-visitor.js';
  */
 export type RoboMlAddedServices = {
     validation: {
+        RoboMlValidator: RoboMlValidator,
+    },
+    visitors: {
         RoboMlAcceptWeaver: RoboMlAcceptWeaver,
         RoboMlInterpreter: RobMlInterpreter,
-        RoboMlValidator: RoboMlValidator,
     }
 }
 
@@ -30,9 +32,11 @@ export type RoboMlServices = LangiumServices & RoboMlAddedServices
  */
 export const RoboMlModule: Module<RoboMlServices, PartialLangiumServices & RoboMlAddedServices> = {
     validation: {
+        RoboMlValidator: () => new RoboMlValidator(),
+    },
+    visitors: {
         RoboMlAcceptWeaver: (services) => new RoboMlAcceptWeaver(services),
         RoboMlInterpreter: () => new RobMlInterpreter(),
-        RoboMlValidator: () => new RoboMlValidator(),
     }
 };
 
@@ -67,8 +71,8 @@ export function createRoboMlServices(context: DefaultSharedModuleContext): {
     shared.ServiceRegistry.register(RoboMl);
     registerValidationChecks(RoboMl);
 
-    RoboMl.validation.RoboMlAcceptWeaver;
-    registerVisitorAsValidator(RoboMl.validation.RoboMlInterpreter, RoboMl);
+    // RoboMl.validation.RoboMlAcceptWeaver;
+    // registerVisitorAsValidator(RoboMl.validation.RoboMlInterpreter, RoboMl);
 
     if (!context.connection) {
         // We don't run inside a language server
