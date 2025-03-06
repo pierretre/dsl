@@ -171,7 +171,7 @@ export class RoboMlValidator {
             if (isIfStmt(stmt)) {
                 this.checkFunctionCallsInBlock(stmt.then, functionMap, accept);
                 if (stmt.else) this.checkFunctionCallsInBlock(stmt.else, functionMap, accept);
-                if (stmt.elseif) this.checkFunctionCallsInBlock(stmt.elseif, functionMap, accept);
+                stmt.elseif.forEach(ei => this.checkFunctionCallsInBlock(ei.then, functionMap, accept));
             }
 
             if (isLoopStmt(stmt)) {

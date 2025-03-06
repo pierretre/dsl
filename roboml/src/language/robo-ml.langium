@@ -33,11 +33,10 @@ Expression returns Expression:
     NumeralExpression | BooleanExpression;
 
 NumeralExpression returns ArithmeticOp:
-    left=MultiplicativeExpression (operator=('+' | '-') right=MultiplicativeExpression)*;
+    left=MultiplicativeExpression ({ArithmeticOp.left=current} operator=('+' | '-') right=MultiplicativeExpression)*;
 
 MultiplicativeExpression returns ArithmeticOp:
-    left=UnaryExpression (operator=('*' | '/') right=UnaryExpression)*
-;
+    left=UnaryExpression ({ArithmeticOp.left=current} operator=('*' | '/') right=UnaryExpression)*;
 
 UnaryExpression returns Expression:
     (Opposite | NumeralPrimaryExpression);
@@ -57,11 +56,11 @@ SensorFunctionCall returns SensorFunctionCall:
 ;
 
 BooleanExpression returns LogicOp:
-    left=AndExpression (operator='or' right=AndExpression)*
+    left=AndExpression ({LogicOp.left=current} operator='or' right=AndExpression)*
 ;
 
 AndExpression returns LogicOp:
-    left=ComparisonExpression (operator='and' right=ComparisonExpression)*
+    left=ComparisonExpression ({LogicOp.left=current} operator='and' right=ComparisonExpression)*
 ;
 
 ComparisonExpression returns ComparisonOp:
@@ -92,9 +91,12 @@ VariableRef returns VariableRef:
 
 IfStmt returns IfStmt:
     'if' condition=Expression 'then' then=Block
-    ( 'else' 'if' condition=Expression 'then' elseif=Block )*
+    (elseif+=ElseIf)*
     ( 'else' else=Block )?
 ;
+
+ElseIf returns ElseIf:
+    'else' 'if' condition=Expression 'then' then=Block;
 
 LoopStmt returns LoopStmt:
     'loop' condition=Expression block=Block;

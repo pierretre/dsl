@@ -49,7 +49,12 @@ interface IfStmt extends Statement {
 	condition: Expression
 	then: Block
 	else?: Block
-	elseif?: Block
+	elseif: ElseIf[]
+}
+
+interface ElseIf {
+	condition: Expression
+	then: Block
 }
 
 interface ReturnStmt extends Statement {
